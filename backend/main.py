@@ -4,6 +4,7 @@ import base64
 import re
 from datetime import datetime
 from fastapi.middleware.cors import CORSMiddleware
+import os
 
 app = FastAPI()
 
@@ -43,14 +44,15 @@ async def upload_screenshot(payload: ScreenshotPayload):
     # Generate a timestamped filename for the screenshot
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"screenshot_{timestamp}.png"
-
-    # Save the screenshot to the local disk
-    with open(filename, "wb") as f:
+    
+    # Save the screenshot to the screenshots directory
+    filepath = os.path.join("screenshots", filename)
+    with open(filepath, "wb") as f:
         f.write(image_bytes)
 
     # Log or otherwise process the page URL/title as needed
     print(f"Received screenshot from page: {payload.pageUrl}")
     print(f"Page title: {payload.pageTitle}")
-    print(f"Saved file: {filename}")
+    print(f"Saved file: {filepath}")
 
     return {"message": "Screenshot received successfully", "filename": filename}
