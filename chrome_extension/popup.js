@@ -1,49 +1,42 @@
-document.getElementById("scrapeBtn").addEventListener("click", async () => {
-    const messageEl = document.getElementById("message");
-  
+document.getElementById("screenshot-btn").addEventListener("click", async () => {
     try {
-      // 1. Get the active tab
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (!tab) {
-        messageEl.textContent = "No active tab found.";
+      // 1. Get the currently active tab in the current window
+      const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!activeTab) {
+        console.error("No active tab found.");
         return;
       }
   
-      // 2. Inject a function into the page to scrape the content
-      const results = await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: () => {
-          // This function runs in the context of the web page
-          // Return the entire text content from the <body>
-          return document.body.innerText;
-        },
+      // 2. Capture the visible area of the current active tab
+      const screenshotDataUrl = await chrome.tabs.captureVisibleTab(activeTab.windowId, {
+        format: "png"
       });
   
-      // 3. Retrieve the scraped data (if any)
-      if (!results || !results.length) {
-        messageEl.textContent = "Failed to scrape page.";
-        return;
-      }
+      // 3. Collect the URL and title of the current page
+      const { title, url } = activeTab;
   
-      const scrapedContent = results[0].result;
-      
-      // 4. Send the scraped data to your server
-      // Replace 'https://example.com/api/upload' with your actual endpoint
-      const response = await fetch("https://example.com/api/upload", {
+      // 4. Send screenshot + page info to your server
+      //    Replace "https://example.com/api/upload" with your own endpoint
+      const response = await fetch("http://127.0.0.1:8000/api/upload", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify({ content: scrapedContent }),
+        body: JSON.stringify({
+          screenshot: screenshotDataUrl, // base64-encoded PNG
+          pageUrl: url,
+          pageTitle: title
+        })
       });
   
       if (response.ok) {
-        messageEl.textContent = "Page content successfully sent to server.";
+        console.log("Screenshot and info successfully sent to the server.");
       } else {
-        messageEl.textContent = "Error sending data to server.";
+        console.error("Failed to send screenshot to server. Status:", response.status);
       }
+  
     } catch (error) {
-      messageEl.textContent = "Error: " + error.toString();
+      console.error("Error capturing or sending screenshot:", error);
     }
   });
   
