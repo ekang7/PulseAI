@@ -1,13 +1,24 @@
 {
-    "manifest_version": 3,
-    "name": "Tab Scraper",
+    "name": "Send Any Page Text",
     "version": "1.0",
-    "permissions": ["tabs", "activeTab", "scripting"],
-    "host_permissions": ["<all_urls>", "http://localhost:3000/*"],
+    "manifest_version": 3,
+    "description": "A button to grab and send page text content to a server on all sites.",
     "background": {
       "service_worker": "background.js"
     },
+    
     "action": {
-      "default_popup": "popup.html"
-    }
+      "default_title": "Send text to server"
+    },
+  
+    "permissions": [
+      "scripting",
+      "tabs"
+    ],
+  
+
+    "host_permissions": [
+      "*://*/*"
+    ]
   }
+  
