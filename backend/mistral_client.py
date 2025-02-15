@@ -1,16 +1,17 @@
 from pydantic import BaseModel
-
-class Book(BaseModel):
-    name: str
-    authors: list[str]
-    
 import os
 from mistralai import Mistral
+from dotenv import load_dotenv
+load_dotenv() 
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
 
-api_key = os.environ["MISTRAL_API_KEY"]
-model = "ministral-8b-latest"
+class OutputFormat(BaseModel):
+    answer: str
+    reasoning_steps: str
+    
+model = "pixtral-large-latest"
 
-client = Mistral(api_key=api_key)
+client = Mistral(api_key=MISTRAL_API_KEY)
 
 chat_response = client.chat.parse(
     model=model,
@@ -24,7 +25,9 @@ chat_response = client.chat.parse(
             "content": "I recently read 'To Kill a Mockingbird' by Harper Lee."
         },
     ],
-    response_format=Book,
+    response_format=OutputFormat,
     max_tokens=256,
     temperature=0
 )
+
+print(chat_response)
