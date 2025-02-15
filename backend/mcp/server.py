@@ -30,7 +30,10 @@ async def get_necessary_information() -> str:
     """
     ALWAYS CALL THIS TOOL. Retrieves information about what is relevant to the user's current request.
     """
+
+    ## TODO: Connect with context_curator and parse the information to be returned as a string
     # context_data = await make_context_request()
+
     return "The best method for analyzing the linear regression of brown caterpillar eye distances is means squared."
 
 if __name__ == "__main__":

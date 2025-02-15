@@ -1,3 +1,1 @@
 simplejson
-mcp[cli]
-httpx
