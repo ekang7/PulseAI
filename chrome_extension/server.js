@@ -1,21 +1,26 @@
 const express = require("express");
+const fs = require("fs");
+const path = require("path");
 const app = express();
-const port = 3000;
 
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 
-let collectedData = [];
+app.post("/upload", (req, res) => {
+    const { title, url, screenshot } = req.body;
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const filePath = path.join(__dirname, "uploads", `screenshot-${timestamp}.png`);
 
-app.post("/collect", (req, res) => {
-  collectedData = req.body.tabs;
-  console.log("Received tab data:", collectedData);
-  res.sendStatus(200);
+    fs.writeFile(filePath, Buffer.from(screenshot, "base64"), (err) => {
+        if (err) {
+            console.error("Failed to save image:", err);
+            return res.status(500).send("Error saving image.");
+        }
+        console.log(`Screenshot saved: ${filePath}`);
+        res.status(200).send("Screenshot received.");
+    });
+
+    console.log(`Title: ${title}`);
+    console.log(`URL: ${url}`);
 });
 
-app.get("/data", (req, res) => {
-  res.json(collectedData);
-});
-
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
-});
+app.listen(3000, () => console.log("Server running on port 3000"));

@@ -1,24 +1,19 @@
 {
-    "name": "Send Any Page Text",
+    "name": "Pulse Screenshot Extension",
+    "description": "Takes a screenshot with one click, saves it, and sends it to a server.",
     "version": "1.0",
     "manifest_version": 3,
-    "description": "A button to grab and send page text content to a server on all sites.",
+    "permissions": [
+      "activeTab",
+      "tabs",
+      "downloads",
+      "scripting"
+    ],
     "background": {
       "service_worker": "background.js"
     },
-    
     "action": {
-      "default_title": "Send text to server"
-    },
-  
-    "permissions": [
-      "scripting",
-      "tabs"
-    ],
-  
-
-    "host_permissions": [
-      "*://*/*"
-    ]
+      "default_popup": "popup.html"
+    }
   }
   

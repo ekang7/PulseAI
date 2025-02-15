@@ -1,49 +1,51 @@
-document.getElementById("scrapeBtn").addEventListener("click", async () => {
-    const messageEl = document.getElementById("message");
-  
+document.getElementById("screenshot-btn").addEventListener("click", async () => {
     try {
-      // 1. Get the active tab
+      // Query the currently active tab in the current window
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       if (!tab) {
-        messageEl.textContent = "No active tab found.";
+        console.error("No active tab found.");
         return;
       }
   
-      // 2. Inject a function into the page to scrape the content
-      const results = await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: () => {
-          // This function runs in the context of the web page
-          // Return the entire text content from the <body>
-          return document.body.innerText;
-        },
+      // Capture visible area of the current active tab
+      const screenshotDataUrl = await chrome.tabs.captureVisibleTab(
+        tab.windowId,
+        { format: "png" }
+      );
+  
+      // Title and URL of the current tab
+      const { title, url } = tab;
+  
+      // Download the screenshot to "pulse" folder in the user's downloads
+      // (Chrome will automatically create the 'pulse' subfolder if it doesn't exist)
+      const timestamp = new Date().getTime();
+      await chrome.downloads.download({
+        url: screenshotDataUrl,
+        filename: `pulse/screenshot-${timestamp}.png` // Will appear under Downloads/pulse/
       });
   
-      // 3. Retrieve the scraped data (if any)
-      if (!results || !results.length) {
-        messageEl.textContent = "Failed to scrape page.";
-        return;
-      }
-  
-      const scrapedContent = results[0].result;
-      
-      // 4. Send the scraped data to your server
-      // Replace 'https://example.com/api/upload' with your actual endpoint
+      // Send the data to the server
+      // Typically you'd replace "https://example.com/api/upload" with your own endpoint
       const response = await fetch("https://example.com/api/upload", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify({ content: scrapedContent }),
+        body: JSON.stringify({
+          screenshot: screenshotDataUrl, // base64-encoded PNG
+          title: title,
+          url: url
+        })
       });
   
-      if (response.ok) {
-        messageEl.textContent = "Page content successfully sent to server.";
+      if (!response.ok) {
+        console.error("Failed to send screenshot to server");
       } else {
-        messageEl.textContent = "Error sending data to server.";
+        console.log("Screenshot data successfully sent to the server.");
       }
+  
     } catch (error) {
-      messageEl.textContent = "Error: " + error.toString();
+      console.error("Error capturing or sending screenshot:", error);
     }
   });
   
