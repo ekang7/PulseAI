@@ -1,1 +1,2 @@
-backend/mcp/.venv/
+mcp_tool/.venv/
+*/__pycache__/
