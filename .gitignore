@@ -1,4 +1,5 @@
-# Python
+mcp_tool/.venv/
+*/__pycache__/
 screenshots/
 __pycache__/
 *.py[cod]
