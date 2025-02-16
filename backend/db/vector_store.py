@@ -3,6 +3,7 @@ import chromadb
 from typing import List, Dict, Any, Optional
 from chromadb.utils import embedding_functions
 import logging
+import uuid
 
 # Set up logging
 logging.basicConfig(
