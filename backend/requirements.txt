@@ -1,3 +1,6 @@
+requests
 simplejson
 mistralai
 chromadb
+pydantic
+python-dotenv
