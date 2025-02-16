@@ -96,11 +96,10 @@ def get_completion(system_prompt: str, user_prompt: str, model: str = "ministral
         The Mistral chat response
     """
 
-    print(f"SYSTEM: {system_prompt}\n\n")
+    # print(f"SYSTEM: {system_prompt}\n\n")
     # print(f"USER: {user_prompt}")
 
     try:
-        print("here1")
         response = client.chat.complete(
             model=model,
             messages=[
@@ -116,7 +115,6 @@ def get_completion(system_prompt: str, user_prompt: str, model: str = "ministral
         )
         return response
     except Exception as e:
-        print("here2")
         print(e)
         raise e 
 

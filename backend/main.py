@@ -87,14 +87,12 @@ def describe_image_with_pixtral(image_bytes):
             ]
         }
     ]
-    print("trying to get response")
     # Perform inference
     response = client.chat.complete(
         model="pixtral-large-latest",
         messages=messages,
         max_tokens=300
     )
-    print("response gotten")
     # Return the model's output
     return response.choices[0].message.content
 
