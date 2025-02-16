@@ -8,6 +8,8 @@ import simplejson as json
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import os
+import asyncio
+from typing import List
 
 load_dotenv()
 PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY")
@@ -28,7 +30,7 @@ class Response(BaseModel):
     thoughts: str
     answer: str
 
-def get_search_response(user_prompt : str) -> Response:
+async def get_search_response(user_prompt : str) -> Response:
     """
     Performs a search query using Perplexity AI and returns a structured response.
     
@@ -122,6 +124,20 @@ def get_related_topics(topic : str) -> Response:
         return Response(**content)
     except Exception as e:
         raise e
+
+async def get_multiple_search_responses(prompts: List[str]) -> List[Response]:
+    """
+    Performs multiple search queries in parallel using Perplexity AI.
+    
+    Args:
+        prompts (list[str]): List of search queries or questions
+        
+    Returns:
+        List[str]: List of strings containing answers/information about topics
+    """
+    tasks = [get_search_response(prompt) for prompt in prompts]
+    results = await asyncio.gather(*tasks)
+    return [r.answer for r in results]
 
 if __name__ == "__main__":
     print(get_related_topics("Stanford University"))

@@ -7,3 +7,4 @@ python-dotenv
 pytesseract
 Pillow
 uvicorn
+asyncio
