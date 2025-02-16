@@ -31,10 +31,10 @@ def call_passive_perplexity(browser_info : str) -> None:
 
 def call_active_perplexity(question : str) -> None:
     topic = mistral.get_topic(question)
-    # db_results = query_documents(topic.topic, 3, "screenshots_collection")
+    db_results = query_documents(topic.topic, 3)
 
-    # related_topic_search = perplexity.get_related_topics_with_other_topics(topic.topic, [metadata["topic"] for metadata in db_results["metadatas"]])
-    # related_topics_info = mistral.get_topics(related_topic_search.answer)
+    related_topic_search = perplexity.get_related_topics_with_other_topics(topic.topic, [metadata["topic"] for metadata in db_results["metadatas"]])
+    related_topics_info = mistral.get_topics(related_topic_search.answer)
 
     documents = [f"Here is information about {topic.name}.\n" + topic.topic_information for topic in related_topics_info.topics]
     metadata = [{"topic" : topic.name} for topic in related_topics_info.topics]
