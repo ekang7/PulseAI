@@ -10,7 +10,7 @@ export default function Navbar() {
     <AppBar position="static">
       <Toolbar>
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          PulseAI
+          PulseAI Database and Log Viewer
         </Typography>
         <Button color="inherit" component={Link} to="/">
           Database
