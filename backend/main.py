@@ -13,6 +13,11 @@ import logging
 from dotenv import load_dotenv
 from clients import mistral
 from typing import List, Any
+import queue
+from fastapi import Request
+from fastapi.responses import StreamingResponse
+import json
+import asyncio
 
 from utils import call_active_perplexity, call_passive_perplexity
 
@@ -214,7 +219,7 @@ async def upload_screenshot(payload: ScreenshotPayload):
         logger.info(f"Combined document length: {len(document_content)}")
         
         # Store in vector DB
-        logger.info("Storing in vector database")
+        logger.info("Storing page information in vector database")
         metadata = {
             "source": "screenshot",
             "url": payload.pageUrl,
@@ -234,8 +239,17 @@ async def upload_screenshot(payload: ScreenshotPayload):
             collection_name="screenshots_collection"
         )
         logger.info("Successfully stored in vector database")
-    
-        call_passive_perplexity(browser_info)
+
+        browser_info = {
+            "filename": filename,
+            "document_content": document_content,
+            "metadata": metadata
+        }
+
+        browser_info_string = json.dumps(browser_info)
+
+        call_passive_perplexity(browser_info_string)
+        
         return {
             "status": "success",
             "message": "Screenshot processed and stored",
@@ -247,9 +261,6 @@ async def upload_screenshot(payload: ScreenshotPayload):
     except Exception as e:
         logger.error(f"Error processing screenshot: {str(e)}", exc_info=True)
         return {"status": "error", "message": str(e)}
-
-
-
 
 
 # A thread-safe queue to store log messages
