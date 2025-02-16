@@ -66,7 +66,7 @@ def add_documents(
     """
     logger.info(f"Adding documents to collection {collection_name}")
     logger.info(f"Number of documents: {len(documents)}")
-    logger.info(f"Document lengths: {[len(doc) for doc in documents]}")
+    logger.info(f"Document length: {[len(doc) for doc in documents]}")
     
     collection = get_or_create_collection(collection_name)
     
@@ -198,7 +198,6 @@ def list_all_documents(collection_name: str = "screenshots_collection") -> Dict[
     try:
         # Get all documents
         results = collection.get()
-        logger.info(f"Found {len(results['ids'])} documents")
         
         return {
             "ids": results["ids"],
