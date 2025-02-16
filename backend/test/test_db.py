@@ -1,5 +1,8 @@
 from db.vector_store import add_documents, query_documents, get_collection_stats, delete_collection
 
+# Tests Chroma by creating, adding, and querying a collection
+
+
 # First, let's clean up any existing collection
 print("Cleaning up existing collection...")
 delete_collection("test_collection")

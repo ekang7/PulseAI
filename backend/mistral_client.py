@@ -75,12 +75,38 @@ def get_summary(text : str) -> str:
         temperature=0
     )
     try:
-        outupt = chat_response.choices[0].message.content
+        output = chat_response.choices[0].message.content
         return output
     except Exception as e:
         print("Warning: The API response is empty. Full response:")
         print(response)
         raise e
+
+def get_completion(system_prompt: str, user_prompt: str):
+    """
+    Get a completion from Mistral using the specified prompts.
+    
+    Args:
+        system_prompt: The system prompt to guide Mistral's behavior
+        user_prompt: The user's input/question
+    
+    Returns:
+        The Mistral chat response
+    """
+
+    return client.chat.complete(
+        model=MODEL,
+        messages=[
+            {
+                "role": "system", 
+                "content": system_prompt
+            },
+            {
+                "role": "user", 
+                "content": user_prompt
+            }
+        ]
+    )
 
 if __name__ == "__main__":
     print(get_topic("## Super Bowl LIX Summary\n\nSuper Bowl LIX took place on February 9, 2025, at Allegiant Stadium in New Orleans, Louisiana. The game featured the Philadelphia Eagles and the Kansas City Chiefs[4][7]. \n\n**Outcome:**\n- The Philadelphia Eagles defeated the Kansas City Chiefs[4].\n\n**Notable Events and Highlights:**\n- The Chiefs were favored by one point going into the game[4].\n- This game was significant as it provided the Eagles with a victory over a strong Chiefs team that was aiming for a three-peat[4].\n\n**Cultural Impact:**\n- The event attracted numerous celebrities, including Messi and Jay-Z, highlighting its cultural significance[4]."))

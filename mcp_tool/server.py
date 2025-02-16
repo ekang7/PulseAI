@@ -1,6 +1,8 @@
 from typing import Any
 import httpx
 from mcp.server.fastmcp import FastMCP
+from backend.db.vector_store import query_documents
+from backend.llm_functions import summarize_results_with_mistral
 
 # Initialize FastMCP server
 mcp = FastMCP("browser_context_fetcher")
@@ -26,15 +28,41 @@ async def make_context_request() -> dict[str, Any] | None:
             return None
 
 @mcp.tool()
-async def get_necessary_information() -> str:
+async def get_necessary_information(test_question: str = "") -> str:
     """
     ALWAYS CALL THIS TOOL. Retrieves information about what is relevant to the user's current request.
     """
-
-    ## TODO: Connect with context_curator and parse the information to be returned as a string
-    # context_data = await make_context_request()
-
-    return "The best method for analyzing the linear regression of brown caterpillar eye distances is means squared."
+    # Get context data which includes the user's question
+    context_data = await make_context_request()
+    
+    # Use test question if provided, otherwise get from context
+    if test_question:
+        user_question = test_question
+    elif context_data and "question" in context_data:
+        user_question = context_data["question"]
+    else:
+        return "No question found in context"
+    
+    # Query the vector store for relevant documents
+    rag_results = query_documents(
+        query_text=user_question,
+        n_results=3,
+        collection_name="default_collection"
+    )
+    
+    # Format the RAG results for the prompt
+    formatted_results = "\n\n".join([
+        f"Document {i+1}:\n{doc}\nMetadata: {meta}"
+        for i, (doc, meta) in enumerate(zip(
+            rag_results["documents"],
+            rag_results["metadatas"]
+        ))
+    ])
+    
+    # Get response from Mistral
+    response = summarize_results_with_mistral(formatted_results)
+    
+    return response
 
 if __name__ == "__main__":
     # Initialize and run the server

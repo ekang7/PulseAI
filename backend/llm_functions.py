@@ -1,5 +1,5 @@
-from typing import List, Dict, Any
-from mistral_client import get_completion
+from typing import Dict, List, Any
+from backend.mistral_client import get_completion
 
 def summarize_results_with_mistral(results: List[Dict[Any, Any]]) -> str:
     """
@@ -13,7 +13,7 @@ def summarize_results_with_mistral(results: List[Dict[Any, Any]]) -> str:
     """
     # Create a structured prompt from the results
     formatted_results = "\n".join([str(result) for result in results])
-    
+
     system_prompt = """
     <system_prompt>
     You are a highly capable Large Language Model whose primary goal is to summarize information in a concise, accurate, and contextually aware way.
@@ -48,22 +48,24 @@ def summarize_results_with_mistral(results: List[Dict[Any, Any]]) -> str:
     # Parse and return the response
     return response.choices[0].message.content
 
-test_dict = test_results = [
-    {
-        "source": "Stack Overflow",
-        "url": "https://stackoverflow.com/q/123456",
-        "content": "If you're running into a TypeError in Python when using pandas, it's likely that your DataFrame contains mixed types. You can use df.dtypes to check the data types of each column. Try converting them explicitly using df['col_name'] = df['col_name'].astype(str)."
-    },
-    {
-        "source": "Official Pandas Documentation",
-        "url": "https://pandas.pydata.org/docs/user_guide/missing_data.html",
-        "content": "Pandas provides multiple ways to handle missing data, including fillna(), dropna(), and interpolation methods. Use df.fillna(value) to replace missing values with a specified value, or use df.dropna() to remove rows with missing data."
-    },
-    {
-        "source": "GitHub Issues",
-        "url": "https://github.com/pandas-dev/pandas/issues/54321",
-        "content": "Users have reported that recent changes in pandas v1.5 may cause compatibility issues when using older versions of numpy. The recommended fix is to upgrade numpy to the latest stable release using pip install --upgrade numpy."
-    }
-]
+if __name__ == "__main__":
+    test_dict = test_results = [
+        {
+            "source": "Stack Overflow",
+            "url": "https://stackoverflow.com/q/123456",
+            "content": "If you're running into a TypeError in Python when using pandas, it's likely that your DataFrame contains mixed types. You can use df.dtypes to check the data types of each column. Try converting them explicitly using df['col_name'] = df['col_name'].astype(str)."
+        },
+        {
+            "source": "Official Pandas Documentation",
+            "url": "https://pandas.pydata.org/docs/user_guide/missing_data.html",
+            "content": "Pandas provides multiple ways to handle missing data, including fillna(), dropna(), and interpolation methods. Use df.fillna(value) to replace missing values with a specified value, or use df.dropna() to remove rows with missing data."
+        },
+        {
+            "source": "GitHub Issues",
+            "url": "https://github.com/pandas-dev/pandas/issues/54321",
+            "content": "Users have reported that recent changes in pandas v1.5 may cause compatibility issues when using older versions of numpy. The recommended fix is to upgrade numpy to the latest stable release using pip install --upgrade numpy."
+        }
+    ]
 
-print(summarize_results_with_mistral(test_dict))
+    formatted_results = "\n".join([str(result) for result in test_dict])
+    print(summarize_results_with_mistral(formatted_results))
