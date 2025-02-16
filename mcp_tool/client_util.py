@@ -23,16 +23,11 @@ def summarize_results_with_mistral(
     })
     return response.json()["summary"]
 
-rag_results = query_documents(
-        query_text="Hello?",
-        n_results=3,
-        collection_name="screenshots_collection"
-    )
-# Format the RAG results for the prompt
-formatted_results = [
-    f"Document {i+1}:\n{doc}\nMetadata: {meta}"
-    for i, (doc, meta) in enumerate(zip(
-        rag_results["documents"],
-        rag_results["metadatas"]
-    ))
-]
+
+def call_active_perplexity(
+    question: str
+) -> None:
+    requests.post(BACKEND_URL + "/api/call_active_perplexity", json={
+        "question": question
+    })
+    return None

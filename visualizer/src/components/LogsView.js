@@ -42,20 +42,45 @@ export default function LogsView() {
 
       return (
         <Box key={idx} sx={{ marginBottom: "0.5rem", fontFamily: "monospace" }}>
-          <Typography component="span" variant="body2" sx={{ color: "#aaa", marginRight: "0.5rem" }}>
+          <Typography
+            component="span"
+            variant="body2"
+            sx={{
+              color: "#aaa",
+              marginRight: "0.5rem",
+              fontFamily: "monospace",
+            }}
+          >
             {timestamp}
           </Typography>
-          <Typography component="span" variant="body2" sx={{ color: "#fff", marginRight: "0.5rem" }}>
+          <Typography
+            component="span"
+            variant="body2"
+            sx={{
+              color: "#fff",
+              marginRight: "0.5rem",
+              fontFamily: "monospace",
+            }}
+          >
             {logger}
           </Typography>
           <Typography
             component="span"
             variant="body2"
-            sx={{ ...levelStyle, marginRight: "0.5rem", fontWeight: "bold" }}
+            sx={{
+              ...levelStyle,
+              marginRight: "0.5rem",
+              fontWeight: "bold",
+              fontFamily: "monospace",
+            }}
           >
             {level}
           </Typography>
-          <Typography component="span" variant="body2">
+          <Typography
+            component="span"
+            variant="body2"
+            sx={{ fontFamily: "monospace" }}
+          >
             {message}
           </Typography>
         </Box>
@@ -71,16 +96,21 @@ export default function LogsView() {
   };
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>
+    <Box sx={{ fontFamily: "monospace" }}>
+      <Typography
+        variant="h4"
+        gutterBottom
+        sx={{ fontFamily: "monospace" }}
+      >
         Real-Time Logs
       </Typography>
       <Box
         sx={{
+          fontFamily: "monospace",
           backgroundColor: "#333",
           color: "#fff",
           padding: "1rem",
-          height: "60vh",
+          height: "70vh",
           overflowY: "scroll",
           borderRadius: "4px",
         }}

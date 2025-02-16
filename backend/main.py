@@ -48,6 +48,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class ActivePerplexityPayload(BaseModel):
+    question : str
+
 class DocumentQueryPayload(BaseModel):
     query_text : str
     n_results : int
@@ -159,8 +162,16 @@ async def collective_summary_endpoint(payload: CollectiveSummaryPayload):
     return {"summary": summary}
 
 
+# api endpoint for active perplexity
+@app.post("/api/call_active_perplexity")
+async def call_active_perplexity_endpoint(payload : ActivePerplexityPayload):
+    question = payload.question
+    try:
+        call_active_perplexity(question)
+    except Exception as e:
+        logger.error(f"Error calling active perplexity: {str(e)}", exc_info=True)
+        return {"status": "error", "message": str(e)}
 
-    
 @app.post("/api/upload")
 async def upload_screenshot(payload: ScreenshotPayload):
     """

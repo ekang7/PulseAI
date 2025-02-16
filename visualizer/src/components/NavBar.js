@@ -7,15 +7,31 @@ import { Link } from "react-router-dom";
 
 export default function Navbar() {
   return (
-    <AppBar position="static">
+    <AppBar
+      position="static"
+      sx={{
+        backgroundColor: "#388e3c", // Darker green
+        boxShadow: "0 3px 5px 2px rgba(56, 142, 60, 0.3)",
+      }}
+    >
       <Toolbar>
-        <Typography variant="h6" sx={{ flexGrow: 1 }}>
+        <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: "bold" }}>
           PulseAI Database and Log Viewer
         </Typography>
-        <Button color="inherit" component={Link} to="/">
+        <Button
+          color="inherit"
+          component={Link}
+          to="/"
+          sx={{ fontWeight: "bold" }}
+        >
           Database
         </Button>
-        <Button color="inherit" component={Link} to="/logs">
+        <Button
+          color="inherit"
+          component={Link}
+          to="/logs"
+          sx={{ fontWeight: "bold" }}
+        >
           Logs
         </Button>
       </Toolbar>

@@ -116,6 +116,9 @@ def query_documents(
         )
         num_results = len(results.get('documents', [[]])[0])
         logger.info(f"Successfully queried vector store with {num_results} results")
+        metadatas = results.get('metadatas', [[]])[0]
+        topics = [meta.get('title') or meta.get('topic') or 'Untitled Document' for meta in metadatas]
+        logger.info(f"The topics of the most relevant documents from running RAG are: {', '.join(topics)}")
         return {
             "documents": results.get('documents', [[]])[0],
             "metadatas": results.get('metadatas', [[]])[0],

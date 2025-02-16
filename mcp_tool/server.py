@@ -1,7 +1,7 @@
 from typing import Any
 import httpx
 from mcp.server.fastmcp import FastMCP
-from client_util import query_documents, summarize_results_with_mistral
+from client_util import query_documents, summarize_results_with_mistral, call_active_perplexity
 
 # Initialize FastMCP server
 mcp = FastMCP("browser_context_fetcher")
@@ -41,6 +41,9 @@ async def get_context_information(question: str = "") -> str:
         user_question = context_data["question"]
     else:
         return "No question found in context"
+
+    # add some more documents to the vector store related to the user's question
+    call_active_perplexity(user_question)
 
     # Query the vector store for relevant documents
     rag_results = query_documents(
