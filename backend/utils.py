@@ -1,9 +1,5 @@
 from clients import mistral, perplexity
 from db.vector_store import add_documents, query_documents
-""" 
-Converts raw browser information (screenshot, url, title) into a string that 
-represents the browser information to be used by the model.
-"""
 
 def call_passive_perplexity(browser_info : str) -> None:
     overall_topic = mistral.get_topic(browser_info)
