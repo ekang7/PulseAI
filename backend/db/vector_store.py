@@ -3,6 +3,17 @@ import chromadb
 from chromadb.config import Settings
 from typing import List, Dict, Any, Optional
 from chromadb.utils import embedding_functions
+import logging
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # Create the directory for persistent storage
 PERSIST_DIRECTORY = os.path.join(os.path.dirname(os.path.dirname(__file__)), "chroma_db")
@@ -17,8 +28,11 @@ default_ef = embedding_functions.DefaultEmbeddingFunction()
 def get_or_create_collection(collection_name: str = "default_collection"):
     """Get an existing collection or create a new one if it doesn't exist."""
     try:
-        return client.get_collection(name=collection_name)
+        collection = client.get_collection(name=collection_name)
+        logger.info(f"Retrieved existing collection: {collection_name}")
+        return collection
     except chromadb.errors.InvalidCollectionException:
+        logger.info(f"Creating new collection: {collection_name}")
         return client.create_collection(
             name=collection_name,
             embedding_function=default_ef
@@ -39,6 +53,10 @@ def add_documents(
         ids: Optional list of unique IDs for each document
         collection_name: Name of the collection to add documents to
     """
+    logger.info(f"Adding documents to collection {collection_name}")
+    logger.info(f"Number of documents: {len(documents)}")
+    logger.info(f"Document lengths: {[len(doc) for doc in documents]}")
+    
     collection = get_or_create_collection(collection_name)
     
     # If no IDs provided, generate them
@@ -49,11 +67,16 @@ def add_documents(
     if metadata is None:
         metadata = [{} for _ in documents]
     
-    collection.add(
-        documents=documents,
-        metadatas=metadata,
-        ids=ids
-    )
+    try:
+        collection.add(
+            documents=documents,
+            metadatas=metadata,
+            ids=ids
+        )
+        logger.info("Successfully added documents to vector store")
+    except Exception as e:
+        logger.error(f"Error adding documents to vector store: {str(e)}")
+        raise
 
 def query_documents(
     query_text: str,
@@ -72,31 +95,46 @@ def query_documents(
         Dictionary containing the query results including documents,
         metadata, and distances
     """
+    logger.info(f"Querying collection {collection_name} for '{query_text}'")
     collection = get_or_create_collection(collection_name)
     
-    results = collection.query(
-        query_texts=[query_text],
-        n_results=n_results
-    )
-    
-    return {
-        "documents": results["documents"][0],
-        "metadatas": results["metadatas"][0],
-        "distances": results["distances"][0],
-        "ids": results["ids"][0]
-    }
+    try:
+        results = collection.query(
+            query_texts=[query_text],
+            n_results=n_results
+        )
+        logger.info(f"Successfully queried vector store with {len(results['documents'][0])} results")
+        return {
+            "documents": results["documents"][0],
+            "metadatas": results["metadatas"][0],
+            "distances": results["distances"][0],
+            "ids": results["ids"][0]
+        }
+    except Exception as e:
+        logger.error(f"Error querying vector store: {str(e)}")
+        raise
 
 def delete_collection(collection_name: str) -> None:
     """Delete a collection and all its contents."""
+    logger.info(f"Deleting collection {collection_name}")
     try:
         client.delete_collection(collection_name)
+        logger.info(f"Successfully deleted collection {collection_name}")
     except ValueError:
+        logger.info(f"Collection {collection_name} does not exist")
         pass  # Collection doesn't exist
 
 def get_collection_stats(collection_name: str = "default_collection") -> Dict[str, Any]:
     """Get statistics about a collection."""
+    logger.info(f"Getting stats for collection {collection_name}")
     collection = get_or_create_collection(collection_name)
-    return {
-        "count": collection.count(),
-        "name": collection.name
-    }
+    try:
+        stats = {
+            "count": collection.count(),
+            "name": collection.name
+        }
+        logger.info(f"Successfully retrieved stats for collection {collection_name}")
+        return stats
+    except Exception as e:
+        logger.error(f"Error getting stats for collection {collection_name}: {str(e)}")
+        raise

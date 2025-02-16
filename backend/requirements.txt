@@ -4,3 +4,5 @@ mistralai
 chromadb
 pydantic
 python-dotenv
+pytesseract
+Pillow

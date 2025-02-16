@@ -1,58 +1,175 @@
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
 import base64
-import re
 from datetime import datetime
 from fastapi.middleware.cors import CORSMiddleware
 import os
+import io
+from PIL import Image
+import pytesseract
+from mistralai import Mistral
+from db.vector_store import add_documents
+from mistral_client import get_completion
+import logging
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # or restrict to your extension's ID/origins
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 class ScreenshotPayload(BaseModel):
     screenshot: str  # data URL (e.g., "data:image/png;base64,iVBORw0KGgoAAAANS...")
     pageUrl: str
     pageTitle: str
 
+def extract_text_from_image(image_bytes):
+    """Extract text from image using OCR"""
+    image = Image.open(io.BytesIO(image_bytes))
+    text = pytesseract.image_to_string(image)
+    return text.strip()
+
+def resize_image(image_bytes, max_size=(500, 500)):
+    """Resize image while maintaining aspect ratio"""
+    image = Image.open(io.BytesIO(image_bytes))
+    image.thumbnail(max_size, Image.Resampling.LANCZOS)
+    
+    # Convert back to bytes
+    output_buffer = io.BytesIO()
+    # Keep as PNG to maintain quality
+    image.save(output_buffer, format='PNG')
+    output_buffer.seek(0)
+    return output_buffer.getvalue()
+
+def describe_image_with_pixtral(image_bytes):
+    """Get image description using Pixtral model"""
+    # Debug original image
+    original_image = Image.open(io.BytesIO(image_bytes))
+    logger.info(f"Original image: size={original_image.size}, mode={original_image.mode}, format={original_image.format}")
+    
+    # Resize image if needed
+    resized_image = resize_image(image_bytes)
+    
+    # Debug resized image
+    debug_image = Image.open(io.BytesIO(resized_image))
+    logger.info(f"Resized image: size={debug_image.size}, mode={debug_image.mode}, format={debug_image.format}")
+    
+    # Convert image to base64 for Pixtral
+    base64_image = base64.b64encode(resized_image).decode('utf-8')
+    logger.info(f"Base64 image length: {len(base64_image)}")
+    
+    system_prompt = """You are an expert at describing images in detail. 
+    Provide a comprehensive, specific, and concise description of the image."""
+    
+    user_prompt = f"""<image>data:image/png;base64,{base64_image}</image>
+    Please describe this image in detail."""
+    
+    print("trying to get response")
+    response = get_completion(
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        model="pixtral-large-latest"
+    )
+    print("response gotten")
+    
+    return response.choices[0].message.content
+
 @app.post("/api/upload")
 async def upload_screenshot(payload: ScreenshotPayload):
     """
     Receives a base64-encoded PNG from the Chrome Extension, plus the page title and URL.
-    Decodes and saves the image locally, and returns a success response.
+
+    Process uploaded screenshots:
+    1. Save the image
+    2. Extract text using OCR
+    3. Get image description using Pixtral
+    4. Store in vector DB
     """
 
-    # The 'screenshot' is a data URL: "data:image/png;base64,<BASE64_DATA>"
-    # We only want the base64 data after the comma
     try:
-        # Split on the first comma to separate "data:image/png;base64" from the actual base64
+        logger.info("Processing new screenshot upload")
+        # The 'screenshot' is a data URL: "data:image/png;base64,<BASE64_DATA>"
+        # We only want the base64 data after the comma
+        # So, split the data URL to get base64 data
         header, encoded = payload.screenshot.split(",", 1)
-    except ValueError:
-        return {"error": "Invalid screenshot data format"}
-
-    # Decode the base64 data into raw bytes
-    try:
         image_bytes = base64.b64decode(encoded)
+        logger.info(f"Decoded image bytes length: {len(image_bytes)}")
+        
+        # Generate timestamp and filenames
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"screenshot_{timestamp}.png"
+        filepath = os.path.join("screenshots", filename)
+        
+        logger.info(f"Saving screenshot to {filepath}")
+        # Create screenshots directory if it doesn't exist
+        os.makedirs("screenshots", exist_ok=True)
+        
+        # Save the screenshot
+        with open(filepath, "wb") as f:
+            f.write(image_bytes)
+            
+        logger.info("Extracting text using OCR")
+        # Extract text using OCR
+        extracted_text = extract_text_from_image(image_bytes)
+        logger.info(f"Extracted text length: {len(extracted_text)}")
+        
+        logger.info("Getting image description from Pixtral")
+        # Get image description using Pixtral
+        image_description = describe_image_with_pixtral(image_bytes)
+        logger.info(f"Image description length: {len(image_description)}")
+        
+        # Combine all information
+        document_content = f"""
+        Page Title: {payload.pageTitle}
+        URL: {payload.pageUrl}
+        
+        Image Description:
+        {image_description}
+        
+        Extracted Text:
+        {extracted_text}
+        """
+        logger.info(f"Combined document length: {len(document_content)}")
+        
+        # Store in vector DB
+        logger.info("Storing in vector database")
+        metadata = {
+            "source": "screenshot",
+            "url": payload.pageUrl,
+            "title": payload.pageTitle,
+            "timestamp": timestamp,
+            "filename": filename
+        }
+        
+        add_documents(
+            documents=[document_content],
+            metadata=[metadata],
+            collection_name="screenshots_collection"
+        )
+        logger.info("Successfully stored in vector database")
+        
+        return {
+            "status": "success",
+            "message": "Screenshot processed and stored",
+            "filename": filename,
+            "extracted_text": extracted_text,
+            "image_description": image_description
+        }
+        
     except Exception as e:
-        return {"error": f"Failed to decode base64: {str(e)}"}
-
-    # Generate a timestamped filename for the screenshot
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"screenshot_{timestamp}.png"
-    
-    # Save the screenshot to the screenshots directory
-    filepath = os.path.join("screenshots", filename)
-    with open(filepath, "wb") as f:
-        f.write(image_bytes)
-
-    # Log or otherwise process the page URL/title as needed
-    print(f"Received screenshot from page: {payload.pageUrl}")
-    print(f"Page title: {payload.pageTitle}")
-    print(f"Saved file: {filepath}")
-
-    return {"message": "Screenshot received successfully", "filename": filename}
+        logger.error(f"Error processing screenshot: {str(e)}", exc_info=True)
+        return {"status": "error", "message": str(e)}
