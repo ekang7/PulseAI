@@ -60,7 +60,7 @@ def add_documents(
     
     # If no IDs provided, generate them
     if ids is None:
-        ids = [str(i) for i in range(len(documents))]
+        ids = [str(uuid.uuid4()) for _ in documents]
     
     # If no metadata provided, use empty dicts
     if metadata is None:
