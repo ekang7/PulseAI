@@ -18,3 +18,7 @@ export async function updateDocument(docId, content, metadata) {
     metadata
   });
 }
+
+export async function deleteDocument(id) {
+    return axios.post(`${BASE_URL}/delete_document`, { id });
+  }

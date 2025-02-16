@@ -131,6 +131,22 @@ async def update_document_endpoint(payload: UpdateDocumentPayload):
         }
 
 
+class DeleteDocumentPayload(BaseModel):
+    id: str
+
+@app.post("/api/delete_document")
+async def delete_document_endpoint(payload: DeleteDocumentPayload):
+    """
+    Endpoint to delete a document by ID.
+    """
+    from db.vector_store import delete_document
+    try:
+        delete_document(payload.id, collection_name="screenshots_collection")
+        return {"status": "success", "message": f"Document {payload.id} deleted."}
+    except Exception as e:
+        logger.error(f"Error deleting document {payload.id}: {str(e)}", exc_info=True)
+        return {"status": "error", "message": str(e)}
+
 
 @app.post("/api/collective_summary")
 async def collective_summary_endpoint(payload: CollectiveSummaryPayload):
