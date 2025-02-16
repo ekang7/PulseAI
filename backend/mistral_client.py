@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+import json
 import os
 from mistralai import Mistral
 from dotenv import load_dotenv
@@ -13,21 +14,31 @@ model = "pixtral-large-latest"
 
 client = Mistral(api_key=MISTRAL_API_KEY)
 
-chat_response = client.chat.parse(
-    model=model,
-    messages=[
-        {
-            "role": "system", 
-            "content": "Extract the books information."
-        },
-        {
-            "role": "user", 
-            "content": "I recently read 'To Kill a Mockingbird' by Harper Lee."
-        },
-    ],
-    response_format=OutputFormat,
-    max_tokens=256,
-    temperature=0
-)
+def get_completion(system_prompt, user_prompt):
+    chat_response = client.chat.parse(
+        model=model,
+        messages=[
+            {
+                "role": "system", 
+                "content": system_prompt
+            },
+            {
+                "role": "user", 
+                "content": user_prompt
+            },
+        ],
+        response_format=OutputFormat,
+        max_tokens=1024,
+        temperature=0.2
+    )
+    return chat_response
 
-print(chat_response)
+
+# response = get_completion("You are a world class researcher.", "Tell me about Michael Jordan.")
+
+# print(response)
+# print("CONTENT", response.choices[0].message.content)
+# x = json.loads(response.choices[0].message.content)
+# print("DICT", x)
+# print("ANSWER", x['answer'])
+# print("REASONING", x['reasoning_steps'])
