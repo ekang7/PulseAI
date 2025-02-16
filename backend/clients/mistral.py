@@ -1,18 +1,30 @@
+"""
+Client for interacting with the Mistral AI API. This module provides functions for topic extraction,
+topic analysis, and text summarization using Mistral's language models.
+"""
+
 from pydantic import BaseModel
 from mistralai import Mistral
 from dotenv import load_dotenv
 import os
-from typing import List
+from typing import List, Any
 import simplejson as json
 
 load_dotenv()
 
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
 MODEL = "ministral-8b-latest"
+PIXTRAL_MODEL = "pixtral-large-latest"
 
 client = Mistral(api_key=MISTRAL_API_KEY)
 
 class TopicResponse(BaseModel):
+    """
+    Response model for single topic extraction.
+    
+    Attributes:
+        topic (str): The main topic identified in the text
+    """
     topic : str
 
 def get_topic(text : str) -> TopicResponse | None:
@@ -53,26 +65,35 @@ def get_topic(text : str) -> TopicResponse | None:
         response_format=TopicResponse,
         temperature=0
     )
-    try:
-        output = json.loads(chat_response.choices[0].message.content)
-        return TopicResponse(**output)
-    except Exception as e:
-        print(e)
-        return None
+    output = json.loads(chat_response.choices[0].message.content)
+    return TopicResponse(**output)
 
 
 class Topic(BaseModel):
+    """
+    Model representing a single topic and its information.
+    
+    Attributes:
+        name (str): The name of the topic
+        topic_information (str): Detailed information about the topic
+    """
     name : str
     topic_information : str
+
 class TopicsResponse(BaseModel):
-    topics : List["Topic"]
+    """
+    Response model for multiple topic extraction.
+    
+    Attributes:
+        topics (List[Topic]): List of topics and their associated information
+    """
+    topics : List[Topic]
 
 def get_topics(text : str) -> TopicsResponse | None:
     """
     Return multiple topics from a text.
     """
     global client
-    
     
     chat_response = client.chat.parse(
         model=MODEL,
@@ -89,11 +110,8 @@ def get_topics(text : str) -> TopicsResponse | None:
         response_format=TopicsResponse,
         temperature=0
     )
-    try:
-        output = json.loads(chat_response.choices[0].message.content)
-        return TopicsResponse(**output)
-    except:
-        return None
+    output = json.loads(chat_response.choices[0].message.content)
+    return TopicsResponse(**output)
 
 def get_summary(text : str) -> str:
     """
@@ -113,11 +131,74 @@ def get_summary(text : str) -> str:
         ],
         temperature=0
     )
-    try:
-        output = chat_response.choices[0].message.content
-        return output
-    except Exception as e:
-        raise e
+    output = chat_response.choices[0].message.content
+    return output
 
-if __name__ == "__main__":
-    print(get_topic(": Here's an overview of Stanford University and adjacent topics in a bulleted list format:\\\\- **History and Founding**: Stanford University was founded in 1885 by Leland and Jane Stanford in memory of their son, Leland Stanford Jr. It officially opened in 1891 as a coeducational and non-denominational institution[1][3].\\\\- **Academic Programs**: The university is organized into seven schools, including the School of Engineering, School of Humanities and Sciences, and the Graduate School of Business. It offers a wide range of undergraduate and graduate programs, with a strong emphasis on research and interdisciplinary studies[2][4].\\\\- **Research and Innovation**: Stanford is classified as an R1: Doctoral Universities – Very high research activity institution. It is home to numerous research centers and institutes, such as the SLAC National Accelerator Laboratory and the Hoover Institution. The university's research expenditure is substantial, contributing to its reputation as a hub for innovation[1][5].\\\\- **Campus Life**: The campus spans 8,180 acres, featuring a mix of historical and modern architecture. Students have access to over 650 student organizations, a vibrant athletic scene, and a residential housing system designed to foster community[2][5].\\\\- **Silicon Valley Connection**: Stanford's proximity to Silicon Valley has fostered a culture of entrepreneurship and innovation. The university's research park, established in 1951, is credited with helping to spur the development of Silicon Valley[1][3].\\\\- **Notable Alumni and Impact**: Stanford alumni include numerous Nobel laureates, billionaires, and leaders in technology and politics. The university's graduates have played significant roles in founding companies like Google, Yahoo!, and Hewlett-Packard[1][3].\\\\- **Location and Climate**: Located in the Bay Area of Northern California, Stanford benefits from a mild climate, offering students opportunities for outdoor activities and access to cultural and technological hubs like San Francisco[2][3]."))
+def get_collective_summary(sources : List[Any]) -> str:
+    """
+    Returns a collective summary of texts using Mistral. 
+    Differs from get_summary since it is supposed to compare and summarize multiple texts.
+    """
+    global client
+
+    system_prompt = """
+    <system_prompt>
+    You are a highly capable Large Language Model whose primary goal is to summarize information in a concise, accurate, and contextually aware way.
+
+    You will receive a list of texts, with each entry corresponding to a different information source.
+
+    <your_task>
+        - Summarize and synthesize the information, focusing on important details and accuracy.
+        - Provide a section with a brief overview and a section with more details.
+    </your_task>
+
+    <guidelines>
+        - Do not invent facts or details not included in the provided information.
+        - Maintain important nuances. If multiple sources provide contradictory information, include the contradiction or uncertainty.
+        - Present the answer clearly and in a helpful format.
+    </guidelines>
+
+    </system_prompt>
+    """.strip()
+
+    promptified_sources = "\n\n".join([str(source) for source in sources])
+
+    chat_response = client.chat.complete(
+        model=MODEL,
+        messages=[
+            {
+                "role": "system", 
+                "content": system_prompt
+            },
+            {
+                "role": "user", 
+                "content": f"Summarize these:\n\n{promptified_sources}"
+            },
+        ],
+        temperature=0
+    )
+    output = chat_response.choices[0].message.content
+    return output
+
+def get_image_description(base64_image):
+    global client
+
+    # Prompt for the Pixtral model
+    prompt = "Please provide a detailed description of the given image."
+    # Prepare input for the Pixtral API
+    messages = [
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}}
+            ]
+        }
+    ]
+    # Perform inference
+    response = client.chat.complete(
+        model=PIXTRAL_MODEL,
+        messages=messages
+    )
+    # Return the model's output
+    return response.choices[0].message.content

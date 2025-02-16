@@ -1,9 +1,13 @@
+"""
+Client for interacting with the Perplexity AI API. This module provides functions to perform
+searches and get related topics using Perplexity's language models.
+"""
+
 import requests
 import simplejson as json
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import os
-from typing import List
 
 load_dotenv()
 PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY")
@@ -14,10 +18,29 @@ HEADERS = {"Authorization": "Bearer " + PERPLEXITY_API_KEY}
 MODEL = "sonar"
 
 class Response(BaseModel):
+    """
+    Response model for Perplexity API responses.
+    
+    Attributes:
+        thoughts (str): The model's thought process or deliberation
+        answer (str): The final answer or response to the query
+    """
     thoughts: str
     answer: str
 
-def get_search_response(user_prompt : str) -> Response:    
+def get_search_response(user_prompt : str) -> Response:
+    """
+    Performs a search query using Perplexity AI and returns a structured response.
+    
+    Args:
+        user_prompt (str): The user's search query or question
+        
+    Returns:
+        Response: A Response object containing the model's thoughts and answer
+        
+    Raises:
+        Exception: If there's an error in API response or JSON parsing
+    """  
     payload = {
         "model": MODEL,
         "messages": [
@@ -54,11 +77,20 @@ def get_search_response(user_prompt : str) -> Response:
         print(response)
         raise e
 
-class Response(BaseModel):
-    thought: str
-    answer: str
 
 def get_related_topics(topic : str) -> Response:
+    """
+    Retrieves information about topics related to the input topic.
+    
+    Args:
+        topic (str): The main topic to find related information about
+        
+    Returns:
+        Response: A Response object containing thoughts and a bulleted list of related topics
+        
+    Raises:
+        Exception: If there's an error in API response or JSON parsing
+    """
     payload = {
         "model": MODEL,
         "messages": [

@@ -2,3 +2,5 @@ mcp[cli]
 httpx
 fastmcp
 uv
+chromadb
+requests

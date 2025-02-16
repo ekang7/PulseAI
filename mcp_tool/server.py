@@ -1,14 +1,10 @@
 from typing import Any
 import httpx
 from mcp.server.fastmcp import FastMCP
-from backend.db.vector_store import query_documents
-from backend.llm_functions import summarize_results_with_mistral
+from client_util import query_documents, summarize_results_with_mistral
 
 # Initialize FastMCP server
 mcp = FastMCP("browser_context_fetcher")
-
-# Constants
-CONTEXT_API_BASE = ""
 
 async def make_context_request() -> dict[str, Any] | None:
     """
@@ -28,21 +24,24 @@ async def make_context_request() -> dict[str, Any] | None:
             return None
 
 @mcp.tool()
-async def get_necessary_information(test_question: str = "") -> str:
+async def get_context_information(question: str = "") -> str:
     """
-    ALWAYS CALL THIS TOOL. Retrieves information about what is relevant to the user's current request.
+    ALWAYS CALL THIS TOOL BEFORE DOING ANYTHING ELSE, ESPECIALLY SEARCHING THE WEB.
+    
+    Retrieves important information about what is relevant to the user's current request.
+    `question` is what the user is asking about.
     """
     # Get context data which includes the user's question
     context_data = await make_context_request()
     
     # Use test question if provided, otherwise get from context
-    if test_question:
-        user_question = test_question
+    if question:
+        user_question = question
     elif context_data and "question" in context_data:
         user_question = context_data["question"]
     else:
         return "No question found in context"
-    
+
     # Query the vector store for relevant documents
     rag_results = query_documents(
         query_text=user_question,
@@ -51,16 +50,16 @@ async def get_necessary_information(test_question: str = "") -> str:
     )
     
     # Format the RAG results for the prompt
-    formatted_results = "\n\n".join([
+    results_as_list = [
         f"Document {i+1}:\n{doc}\nMetadata: {meta}"
         for i, (doc, meta) in enumerate(zip(
             rag_results["documents"],
             rag_results["metadatas"]
         ))
-    ])
+    ]
     
     # Get response from Mistral
-    response = summarize_results_with_mistral(formatted_results)
+    response = summarize_results_with_mistral(results_as_list)
     
     return response
 

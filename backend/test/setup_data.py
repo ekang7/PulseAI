@@ -1,4 +1,4 @@
-from backend.db.vector_store import add_documents, delete_collection
+from db.vector_store import add_documents, delete_collection
 
 # Sets up example DB
 

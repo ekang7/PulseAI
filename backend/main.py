@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from pydantic import BaseModel
 import base64
 from datetime import datetime
@@ -8,11 +8,11 @@ import io
 from PIL import Image
 import pytesseract
 from mistralai import Mistral
-from db.vector_store import add_documents
-from mistral_client import get_completion
+from db.vector_store import add_documents, query_documents
 import logging
 from dotenv import load_dotenv
-
+from clients import mistral
+from typing import List, Any
 
 load_dotenv()
 
@@ -40,6 +40,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+class DocumentQueryPayload(BaseModel):
+    query_text : str
+    n_results : int
+    collection_name : str
+
+class CollectiveSummaryPayload(BaseModel):
+    sources : List[Any]
 
 class ScreenshotPayload(BaseModel):
     screenshot: str  # data URL (e.g., "data:image/png;base64,iVBORw0KGgoAAAANS...")
@@ -75,27 +83,17 @@ def describe_image_with_pixtral(image_bytes):
     # Convert image to base64 for Pixtral
     base64_image = base64.b64encode(resized_image).decode('utf-8')
 
-    # Prompt for the Pixtral model
-    prompt = "Please provide a detailed description of the given image."
-    # Prepare input for the Pixtral API
-    messages = [
-        {
-            "role": "user",
-            "content": [
-                {"type": "text", "text": prompt},
-                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}}
-            ]
-        }
-    ]
-    # Perform inference
-    response = client.chat.complete(
-        model="pixtral-large-latest",
-        messages=messages,
-        max_tokens=300
-    )
-    # Return the model's output
-    return response.choices[0].message.content
+    return mistral.get_image_description(base64_image)
 
+@app.post("/api/query_documents")
+async def query_documents_endpoint(payload: DocumentQueryPayload):
+    results = query_documents(payload.query_text, payload.n_results, payload.collection_name)
+    return results
+
+@app.post("/api/collective_summary")
+async def collective_summary_endpoint(payload: CollectiveSummaryPayload):
+    summary = mistral.get_collective_summary(payload.sources)
+    return {"summary": summary}
 
 @app.post("/api/upload")
 async def upload_screenshot(payload: ScreenshotPayload):

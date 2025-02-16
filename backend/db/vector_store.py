@@ -1,6 +1,5 @@
 import os
 import chromadb
-from chromadb.config import Settings
 from typing import List, Dict, Any, Optional
 from chromadb.utils import embedding_functions
 import logging
@@ -16,7 +15,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Create the directory for persistent storage
-PERSIST_DIRECTORY = os.path.join(os.path.dirname(os.path.dirname(__file__)), "chroma_db")
+PERSIST_DIRECTORY = os.path.join(os.path.dirname(__file__), "..", "chroma_db")
 os.makedirs(PERSIST_DIRECTORY, exist_ok=True)
 
 # Initialize the ChromaDB client with persistent storage

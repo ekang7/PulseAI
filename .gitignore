@@ -1,5 +1,6 @@
 mcp_tool/.venv/
 */__pycache__/
+chroma_db/
 screenshots/
 __pycache__/
 *.py[cod]
