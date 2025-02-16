@@ -11,6 +11,15 @@ from mistralai import Mistral
 from db.vector_store import add_documents
 from mistral_client import get_completion
 import logging
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
+MODEL = "ministral-8b-latest"
+
+client = Mistral(api_key=MISTRAL_API_KEY)
 
 # Set up logging
 logging.basicConfig(
@@ -59,34 +68,36 @@ def describe_image_with_pixtral(image_bytes):
     """Get image description using Pixtral model"""
     # Debug original image
     original_image = Image.open(io.BytesIO(image_bytes))
-    logger.info(f"Original image: size={original_image.size}, mode={original_image.mode}, format={original_image.format}")
     
     # Resize image if needed
     resized_image = resize_image(image_bytes)
     
-    # Debug resized image
-    debug_image = Image.open(io.BytesIO(resized_image))
-    logger.info(f"Resized image: size={debug_image.size}, mode={debug_image.mode}, format={debug_image.format}")
-    
     # Convert image to base64 for Pixtral
     base64_image = base64.b64encode(resized_image).decode('utf-8')
-    logger.info(f"Base64 image length: {len(base64_image)}")
-    
-    system_prompt = """You are an expert at describing images in detail. 
-    Provide a comprehensive, specific, and concise description of the image."""
-    
-    user_prompt = f"""<image>data:image/png;base64,{base64_image}</image>
-    Please describe this image in detail."""
-    
+
+    # Prompt for the Pixtral model
+    prompt = "Please provide a detailed description of the given image."
+    # Prepare input for the Pixtral API
+    messages = [
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}}
+            ]
+        }
+    ]
     print("trying to get response")
-    response = get_completion(
-        system_prompt=system_prompt,
-        user_prompt=user_prompt,
-        model="pixtral-large-latest"
+    # Perform inference
+    response = client.chat.complete(
+        model="pixtral-large-latest",
+        messages=messages,
+        max_tokens=300
     )
     print("response gotten")
-    
+    # Return the model's output
     return response.choices[0].message.content
+
 
 @app.post("/api/upload")
 async def upload_screenshot(payload: ScreenshotPayload):
@@ -105,8 +116,8 @@ async def upload_screenshot(payload: ScreenshotPayload):
         # The 'screenshot' is a data URL: "data:image/png;base64,<BASE64_DATA>"
         # We only want the base64 data after the comma
         # So, split the data URL to get base64 data
-        header, encoded = payload.screenshot.split(",", 1)
-        image_bytes = base64.b64decode(encoded)
+        header, encoded_image = payload.screenshot.split(",", 1)
+        image_bytes = base64.b64decode(encoded_image)
         logger.info(f"Decoded image bytes length: {len(image_bytes)}")
         
         # Generate timestamp and filenames
@@ -155,9 +166,14 @@ async def upload_screenshot(payload: ScreenshotPayload):
             "filename": filename
         }
         
+        # Generate a unique ID using timestamp
+        unique_id = f"screenshot_{timestamp}"
+        logger.info(f"Using unique ID: {unique_id}")
+        
         add_documents(
             documents=[document_content],
             metadata=[metadata],
+            ids=[unique_id],  # Pass the unique ID
             collection_name="screenshots_collection"
         )
         logger.info("Successfully stored in vector database")

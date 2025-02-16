@@ -138,3 +138,21 @@ def get_collection_stats(collection_name: str = "default_collection") -> Dict[st
     except Exception as e:
         logger.error(f"Error getting stats for collection {collection_name}: {str(e)}")
         raise
+
+def list_all_documents(collection_name: str = "default_collection") -> Dict[str, Any]:
+    """List all documents in a collection with their IDs and metadata."""
+    logger.info(f"Listing all documents in collection {collection_name}")
+    collection = get_or_create_collection(collection_name)
+    try:
+        # Get all documents
+        results = collection.get()
+        logger.info(f"Found {len(results['ids'])} documents")
+        
+        return {
+            "ids": results["ids"],
+            "documents": results["documents"],
+            "metadatas": results["metadatas"]
+        }
+    except Exception as e:
+        logger.error(f"Error listing documents: {str(e)}")
+        raise
