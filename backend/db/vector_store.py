@@ -3,6 +3,7 @@ import chromadb
 from typing import List, Dict, Any, Optional
 from chromadb.utils import embedding_functions
 import logging
+import uuid
 
 # Set up logging
 logging.basicConfig(
@@ -60,7 +61,7 @@ def add_documents(
     
     # If no IDs provided, generate them
     if ids is None:
-        ids = [str(i) for i in range(len(documents))]
+        ids = [str(uuid.uuid4()) for _ in documents]
     
     # If no metadata provided, use empty dicts
     if metadata is None:
