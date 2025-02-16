@@ -30,7 +30,7 @@ class Response(BaseModel):
     thoughts: str
     answer: str
 
-async def get_search_response(user_prompt : str) -> Response:
+def get_search_response(user_prompt : str) -> Response:
     """
     Performs a search query using Perplexity AI and returns a structured response.
     
@@ -98,14 +98,14 @@ def get_related_topics(topic : str) -> Response:
         "messages": [
             {
                 "role": "system",
-                "content": "Provide in-depth information about the user's input and topics adjacent to it. Output a JSON object with fields `thoughts`, and `answer`."
+                "content": "Provide in-depth information about the user's input and exactly 3 topics adjacent to it. Output a JSON object with fields `thoughts`, and `answer`."
                 + " \n`thoughts` should be a discussion with yourself about what the user may want to know."
                 + "\n`answer` should be an answer to the user's question, providing extensive information about adjacent topics in a bulleted list format. Each topic should have at least three sentences."
                 + "\nIf the user is asking about something related to programming, make sure to include code examples and explanations throughout your response."
             },
             {
                 "role": "user",
-                "content": "Tell me about " + topic.strip() + " and topics adjacent to it."
+                "content": "Tell me about " + topic.strip() + " and 3 topics adjacent to it."
             },
         ],
         "response_format": {
@@ -126,5 +126,40 @@ def get_related_topics(topic : str) -> Response:
     except Exception as e:
         raise e
 
-if __name__ == "__main__":
-    print(get_related_topics("Stanford University"))
+def get_related_topics_with_other_topics(topic : str, other_topics : List[str]) -> Response:
+    prompted_topics = ""
+    for i in range(len(other_topics)):
+        prompted_topics += "- " + other_topics[i] + "\n"
+    payload = {
+        "model": MODEL,
+        "messages": [
+            {
+                "role": "system",
+                "content": "Provide in-depth information about the user's input and exactly 3 topics adjacent to it. Output a JSON object with fields `thoughts`, and `answer`."
+                + " \n`thoughts` should be a discussion with yourself about what the user may want to know."
+                + "\n`answer` should be an answer to the user's question, providing extensive information about adjacent topics in a bulleted list format. Each topic should have at least three sentences."
+                + "\nIf the user is asking about something related to programming, make sure to include code examples and explanations throughout your response."
+            },
+            {
+                "role": "user",
+                "content": "Tell me about " + topic.strip() + ". Then, tell me about 3 topics relevant to it. Some potentially related topics we are aware of are:\n" + prompted_topics
+            },
+        ],
+        "response_format": {
+            "type": "json_schema",
+            "json_schema": {"schema": Response.model_json_schema()},
+        },
+    }
+    response = requests.post(URL, headers=HEADERS, json=payload).json()
+    raw_content = ...
+    try:
+        raw_content = response["choices"][0]["message"]["content"].strip()
+    except Exception as e:
+        raise e
+
+    try:
+        content = json.loads(raw_content, strict=False)
+        print(content["answer"])
+        return Response(**content)
+    except Exception as e:
+        raise e

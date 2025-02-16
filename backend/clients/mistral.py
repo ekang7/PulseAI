@@ -59,6 +59,14 @@ def get_topic(text : str) -> TopicResponse | None:
             },
             {
                 "role": "user",
+                "content": "Who won the 2024 Super Bowl?"
+            },
+            {
+                "role": "assistant",
+                "content": "2024 Super Bowl winner"
+            },
+            {
+                "role": "user",
                 "content": text
             }
         ],

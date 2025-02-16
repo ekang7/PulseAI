@@ -2,18 +2,19 @@ from db.vector_store import add_documents, query_documents, get_collection_stats
 
 # Example documents
 documents = [
-    "The quick brown fox jumps over the lazy dog",
-    "A fast orange fox leaps across a sleepy canine",
-    "The lazy dog sleeps while the fox runs by",
-    "A brown dog chases the quick fox around"
+    "Python is a high-level programming language known for its simplicity and readability. It's widely used in data science, web development, and AI.",
+    "JavaScript is the primary language for web development, enabling interactive web pages and running both in browsers and on servers via Node.js.",
+    "React is a JavaScript library for building user interfaces, particularly single-page applications. It was developed by Facebook.",
+    "Docker is a platform for developing, shipping, and running applications in containers, making it easier to deploy software consistently.",
+    "Git is a distributed version control system that helps track changes in source code during software development.",
 ]
 
-# Example metadata
 metadata = [
-    {"type": "sentence", "animal": "fox,dog"},
-    {"type": "sentence", "animal": "fox,dog"},
-    {"type": "sentence", "animal": "fox,dog"},
-    {"type": "sentence", "animal": "fox,dog"}
+    {"topic": "programming", "language": "Python", "category": "language"},
+    {"topic": "web", "language": "JavaScript", "category": "language"},
+    {"topic": "web", "framework": "React", "category": "framework"},
+    {"topic": "devops", "tool": "Docker", "category": "platform"},
+    {"topic": "devops", "tool": "Git", "category": "tool"},
 ]
 
 def main():

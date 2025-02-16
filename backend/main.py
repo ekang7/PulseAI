@@ -13,14 +13,8 @@ import logging
 from dotenv import load_dotenv
 from clients import mistral
 from typing import List, Any
-from fastapi.responses import StreamingResponse
-import asyncio
-import queue
-from pydantic import BaseModel
-from fastapi import Request
 
-
-import utils
+from utils import call_active_perplexity, call_passive_perplexity
 
 load_dotenv()
 
@@ -143,14 +137,8 @@ async def collective_summary_endpoint(payload: CollectiveSummaryPayload):
     summary = mistral.get_collective_summary(payload.sources)
     return {"summary": summary}
 
-def call_passive_perplexity(browser_info):
-    related_topics_info = utils.browser_info_to_related_topics(browser_info)
-    documents = [topic.topic_information for topic in related_topics_info.topics]
-    metadata = [{"topic" : topic.name} for topic in related_topics_info.topics]
-    add_documents(documents, metadata)
 
-def call_active_perplexity(question):
-    pass
+
     
 @app.post("/api/upload")
 async def upload_screenshot(payload: ScreenshotPayload):
