@@ -124,6 +124,16 @@ def delete_collection(collection_name: str) -> None:
         pass  # Collection doesn't exist
 
 
+def delete_document(id: str, collection_name: str = "screenshots_collection"):
+    """
+    Delete a document from the vector store by ID.
+    """
+    logger.info(f"Deleting document with ID: {id} in collection {collection_name}")
+    collection = get_or_create_collection(collection_name)
+    collection.delete(ids=[id])
+    logger.info(f"Document {id} deleted successfully.")
+
+
 def update_document(
     id: str,
     new_content: str,

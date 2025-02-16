@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { getAllDocuments, updateDocument } from "../services/dbService";
 import {
   Typography,
@@ -7,13 +7,20 @@ import {
   Button,
   Stack,
   Box,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 
 export default function DocumentEditor() {
   const { docId } = useParams();
+  const navigate = useNavigate();
   const [content, setContent] = useState("");
   const [metadata, setMetadata] = useState({});
   const [originalData, setOriginalData] = useState(null);
+  const [openSuccessModal, setOpenSuccessModal] = useState(false);
 
   useEffect(() => {
     fetchDocument();
@@ -21,7 +28,7 @@ export default function DocumentEditor() {
 
   const fetchDocument = async () => {
     try {
-      // We'll fetch *all* docs, then find the one we need
+      // We'll fetch all docs and then find the one we need
       const response = await getAllDocuments();
       if (!response || !response.ids) return;
 
@@ -42,11 +49,20 @@ export default function DocumentEditor() {
   const handleSave = async () => {
     try {
       await updateDocument(docId, content, metadata);
-      alert("Document updated successfully!");
+      setOpenSuccessModal(true);
     } catch (err) {
       console.error("Error updating document:", err);
-      alert("Error updating document!");
+      // Optionally, handle errors with a modal or message here.
     }
+  };
+
+  const handleCancel = () => {
+    navigate(-1); // Go back to the previous page
+  };
+
+  const handleSuccessModalClose = () => {
+    setOpenSuccessModal(false);
+    navigate("/"); // Navigate back to the main database view (or adjust as needed)
   };
 
   if (!originalData) {
@@ -54,7 +70,7 @@ export default function DocumentEditor() {
   }
 
   return (
-    <Box>
+    <Box sx={{ mt: 4 }}>
       <Typography variant="h4" gutterBottom>
         Editing Document: {docId}
       </Typography>
@@ -75,14 +91,34 @@ export default function DocumentEditor() {
             try {
               setMetadata(JSON.parse(e.target.value));
             } catch (err) {
-              // ignore parse errors
+              // Ignore JSON parse errors while editing.
             }
           }}
         />
-        <Button variant="contained" onClick={handleSave}>
-          Save
-        </Button>
+        <Stack direction="row" spacing={2}>
+          <Button variant="contained" onClick={handleSave}>
+            Save
+          </Button>
+          <Button variant="outlined" onClick={handleCancel}>
+            Cancel
+          </Button>
+        </Stack>
       </Stack>
+
+      {/* Custom success modal */}
+      <Dialog open={openSuccessModal} onClose={handleSuccessModalClose}>
+        <DialogTitle>Success</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Document updated successfully!
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleSuccessModalClose} variant="contained">
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
