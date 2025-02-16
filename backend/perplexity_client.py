@@ -3,48 +3,50 @@ import simplejson as json
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import os
+from typing import Dict
 
 load_dotenv()
 PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY")
 
 
-class AnswerFormat(BaseModel):
+URL = "https://api.perplexity.ai/chat/completions"
+HEADERS = {"Authorization": "Bearer " + PERPLEXITY_API_KEY}
+MODEL = "sonar"
+
+class Response(BaseModel):
+    thoughts: str
     answer: str
-    reasoning: str
 
-
-url = "https://api.perplexity.ai/chat/completions"
-headers = {"Authorization": "Bearer " + PERPLEXITY_API_KEY}
-
-def get_completion(system_prompt, user_prompt):
+def get_search_response(user_prompt):
     payload = {
-        "model": "sonar-pro",
+        "model": MODEL,
         "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt +" Please output a JSON object containing the following fields: " + "answer, reasoning"},
+            {"role": "system", "content": "Please provide a precise answer. Output a JSON object with fields `thoughts` and `answer`. Your `thoughts` should be a short deliberation of details that the user may want to know. Then, provide your `answer`."},
+            {"role": "user", "content": user_prompt},
         ],
         "response_format": {
             "type": "json_schema",
-            "json_schema": {"schema": AnswerFormat.model_json_schema()},
+            "json_schema": {"schema": Response.model_json_schema()},
         },
     }
-    response = requests.post(url, headers=headers, json=payload).json()
-    raw_content = response["choices"][0]["message"]["content"].strip()
-    if not raw_content:
+    response = requests.post(URL, headers=HEADERS, json=payload).json()
+    raw_content = ...
+    try:
+        raw_content = response["choices"][0]["message"]["content"].strip()
+    except Exception as e:
         print("Warning: The API response is empty. Full response:")
         print(response)
-        return {"answer": "No answer returned", "reasoning": ""}
+        raise e
+
     try:
         content = json.loads(raw_content, strict=False)
+        return Response(**content)
     except Exception as e:
         print("Error decoding JSON. Raw content:")
         print(raw_content)
         print("Full response:")
         print(response)
         raise e
-    return content
 
-print(get_completion(
-    "You are a world class researcher.",
-    "Tell me about Michael Jordan."
-)['answer'])
+if __name__ == "__main__":
+    print(get_search_response("Tell me about topics that are related to Means Squared Error (MSE)."))

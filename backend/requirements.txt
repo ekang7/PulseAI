@@ -1,1 +1,5 @@
+requests
 simplejson
+pydantic
+python-dotenv
+mistralai
