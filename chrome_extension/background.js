@@ -40,22 +40,22 @@ async function captureScreenshot(tab) {
   }
 }
 
-// 1) When the user switches tabs (onActivated), wait 3 seconds, then capture screenshot
-chrome.tabs.onActivated.addListener(async (activeInfo) => {
-  setTimeout(async () => {
-    try {
-      const tab = await chrome.tabs.get(activeInfo.tabId);
-      await captureScreenshot(tab);
-    } catch (err) {
-      console.error("Error after tab switch:", err);
-    }
-  }, 3000);
-});
+// // 1) When the user switches tabs (onActivated), wait 3 seconds, then capture screenshot
+// chrome.tabs.onActivated.addListener(async (activeInfo) => {
+//   setTimeout(async () => {
+//     try {
+//       const tab = await chrome.tabs.get(activeInfo.tabId);
+//       await captureScreenshot(tab);
+//     } catch (err) {
+//       console.error("Error after tab switch:", err);
+//     }
+//   }, 3000);
+// });
 
-// 2) Listen for messages from contentScript.js indicating scrolling has stopped for 3 seconds
-chrome.runtime.onMessage.addListener((message, sender) => {
-  if (message.type === "scrollStopped") {
-    // The tab that sent the message is sender.tab
-    captureScreenshot(sender.tab);
-  }
-});
+// // 2) Listen for messages from contentScript.js indicating scrolling has stopped for 3 seconds
+// chrome.runtime.onMessage.addListener((message, sender) => {
+//   if (message.type === "scrollStopped") {
+//     // The tab that sent the message is sender.tab
+//     captureScreenshot(sender.tab);
+//   }
+// });
