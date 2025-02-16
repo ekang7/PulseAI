@@ -123,6 +123,41 @@ def delete_collection(collection_name: str) -> None:
         logger.info(f"Collection {collection_name} does not exist")
         pass  # Collection doesn't exist
 
+
+def update_document(
+    id: str,
+    new_content: str,
+    new_metadata: dict,
+    collection_name: str = "screenshots_collection"
+):
+    """
+    Update a document in the vector store by ID. We do this by:
+    1) Deleting the existing document with that ID.
+    2) Adding a new document with the same ID, updated content, and metadata.
+    """
+    logger.info(f"Updating document with ID: {id} in collection {collection_name}")
+    collection = get_or_create_collection(collection_name)
+
+    # Remove the old document if it exists
+    try:
+        collection.delete(ids=[id])
+        logger.info(f"Deleted old document with ID: {id}")
+    except Exception as e:
+        logger.warning(f"Could not delete old doc with ID {id}: {e}")
+
+    # Add the updated document
+    try:
+        collection.add(
+            documents=[new_content],
+            metadatas=[new_metadata],
+            ids=[id]
+        )
+        logger.info(f"Document {id} updated successfully.")
+    except Exception as e:
+        logger.error(f"Could not add updated doc with ID {id}: {e}")
+        raise
+
+
 def get_collection_stats(collection_name: str = "screenshots_collection") -> Dict[str, Any]:
     """Get statistics about a collection."""
     logger.info(f"Getting stats for collection {collection_name}")
