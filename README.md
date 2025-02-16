@@ -1,51 +1,108 @@
-# PulseAI - Current Implementation Status
+# PulseAI: AI-Powered Screenshot Analysis Tool
 
-## What's Working
+PulseAI is a powerful screenshot capture and analysis system that combines OCR, image understanding, and vector search capabilities to help you organize and retrieve information from your screenshots.
 
-1. **ChromaDB Integration**
-   - Using persistent storage in `backend/db/vector_store.py`
-   - Can add and query documents
-   - Currently using default embedding function
+## Features
 
-2. **Mistral Integration**
-   - Client set up in `backend/mistral_client.py`
-   - Using "ministral-8b-latest" model
-   - Three main functions:
-     - `get_completion()`: Raw model completion
-     - `get_topic()`: Extract topic from text
-     - `get_summary()`: Summarize text
+- **Screenshot Capture**: Chrome extension for easy screenshot capture
+- **Text Extraction**: OCR using Tesseract for extracting text from images
+- **Image Understanding**: AI-powered image description using Pixtral
+- **Vector Search**: Semantic search through screenshots using ChromaDB
+- **MCP Integration**: Seamless integration with Codeium's MCP framework
 
-3. **MCP Tool Implementation**
-   - Basic server running in `mcp_tool/server.py`
-   - Main function: `get_necessary_information()`
-   - RAG pipeline:
-     1. Get user question
-     2. Query ChromaDB for relevant docs
-     3. Format results
-     4. Get Mistral summary
+## Components
 
-## Testing
+### Backend (`/backend`)
 
-- Test script: `mcp_tool/test_mcp.py`
-- Sets up sample documents about programming topics
-- Runs test queries through the RAG pipeline
+- `main.py`: FastAPI server handling screenshot uploads and processing
+- `mistral_client.py`: Mistral AI integration for text and image analysis
+- `db/vector_store.py`: ChromaDB wrapper for vector storage and retrieval
+- `view_screenshots.py`: Utility script to view stored screenshots
 
-## Current Setup Requirements
+### Chrome Extension (`/chrome_extension`)
 
-1. Need `.env` file with:
-   ```
-   MISTRAL_API_KEY=your_key_here
-   ```
+- Captures screenshots of web pages
+- Sends screenshots to backend with metadata
+- Endpoint: `http://127.0.0.1:8000/api/upload`
 
-2. Run with:
-   ```
-   PYTHONPATH=/Users/paula/PulseAI python mcp_tool/test_mcp.py
-   ```
+### MCP Tool (`/mcp_tool`)
 
-## Next Steps
+- `server.py`: MCP server for context retrieval
+- Implements RAG pipeline for intelligent responses
 
-- [ ] Improve ChromaDB query relevance
-- [ ] Add proper error handling
-- [ ] Set up logging
-- [ ] Integrate with Codeium properly
-- [ ] Add more test cases
+## Setup
+
+1. Install Python dependencies:
+```bash
+pip install -r backend/requirements.txt
+```
+
+2. Install system dependencies:
+```bash
+brew install tesseract
+```
+
+3. Set environment variables:
+```bash
+export MISTRAL_API_KEY=your_api_key
+export PYTHONPATH=/path/to/PulseAI
+```
+
+## Usage
+
+1. Start the backend server:
+```bash
+cd backend
+uvicorn main:app --reload
+```
+
+2. Install the Chrome extension:
+   - Open Chrome
+   - Go to `chrome://extensions`
+   - Enable Developer mode
+   - Load unpacked extension from `chrome_extension` directory
+
+3. Take screenshots:
+   - Click the extension icon
+   - Select area to capture
+   - Screenshot will be processed and stored
+
+4. View stored screenshots:
+```bash
+cd backend
+python view_screenshots.py
+```
+
+## Architecture
+
+### Screenshot Processing Pipeline
+
+1. **Capture**: Chrome extension captures screenshot and metadata
+2. **Storage**: Image saved to `backend/screenshots` directory
+3. **Processing**:
+   - OCR extracts text using Tesseract
+   - Pixtral generates detailed image description
+4. **Indexing**:
+   - Combined data stored in ChromaDB
+   - Each screenshot gets unique timestamp-based ID
+   - Metadata includes URL, title, and timestamps
+
+### Vector Database
+
+- Uses ChromaDB for persistent storage
+- Stores combined text, descriptions, and metadata
+- Enables semantic search across screenshots
+- Located in `backend/chroma_db`
+
+## Development Notes
+
+### Current Status
+- Screenshot capture and storage
+- OCR text extraction
+- AI image description
+- Vector database integration
+- Basic search functionality
+
+## License
+
+This project is licensed under the MIT License. See LICENSE file for details.
