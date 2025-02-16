@@ -16,7 +16,7 @@ PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY")
 
 URL = "https://api.perplexity.ai/chat/completions"
 HEADERS = {"Authorization": "Bearer " + PERPLEXITY_API_KEY}
-MODEL = "sonar"
+MODEL = "sonar-pro"
 
 class Response(BaseModel):
     """
@@ -123,6 +123,8 @@ def get_related_topics(topic : str) -> Response:
         content = json.loads(raw_content, strict=False)
         return Response(**content)
     except Exception as e:
+        print(json.dumps(payload))
+        print(raw_content)
         raise e
 
 def get_related_topics_with_other_topics(topic : str, other_topics : List[str]) -> Response:

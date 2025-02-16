@@ -257,15 +257,15 @@ async def upload_screenshot(payload: ScreenshotPayload):
             "metadata": metadata
         }
 
-        browser_info_string = json.dumps(browser_info)
+        # browser_info_string = json.dumps(browser_info)
 
-        call_passive_perplexity(browser_info_string)
+        call_passive_perplexity(browser_info["document_content"])
         
         return {
             "status": "success",
             "message": "Screenshot processed and stored",
             "filename": filename,
-            "extracted_text": extracted_text,
+            # "extracted_text": extracted_text,
             "image_description": image_description
         }
         

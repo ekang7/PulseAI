@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 def call_passive_perplexity(browser_info : str) -> None:
     overall_topic = mistral.get_topic(browser_info)
+    print(overall_topic)
     related_topic_search = perplexity.get_related_topics(overall_topic.topic)
     related_topics_info = mistral.get_topics(related_topic_search.answer)
 
