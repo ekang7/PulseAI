@@ -13,6 +13,12 @@ import logging
 from dotenv import load_dotenv
 from clients import mistral
 from typing import List, Any
+from fastapi.responses import StreamingResponse
+import asyncio
+import queue
+from pydantic import BaseModel
+from fastapi import Request
+
 
 import utils
 
@@ -92,6 +98,46 @@ async def query_documents_endpoint(payload: DocumentQueryPayload):
     results = query_documents(payload.query_text, payload.n_results, payload.collection_name)
     return results
 
+@app.get("/api/list_all_documents")
+async def list_all_documents_endpoint():
+    from db.vector_store import list_all_documents
+    return list_all_documents("screenshots_collection")
+
+
+
+class UpdateDocumentPayload(BaseModel):
+    id: str
+    content: str
+    metadata: dict = {}
+
+@app.post("/api/update_document")
+async def update_document_endpoint(payload: UpdateDocumentPayload):
+    """
+    Receives an ID, new content, and metadata to update a document
+    in the 'screenshots_collection' (or any other collection).
+    """
+    from db.vector_store import update_document 
+
+    try:
+        update_document(
+            id=payload.id,
+            new_content=payload.content,
+            new_metadata=payload.metadata,
+            collection_name="screenshots_collection"  
+        )
+        return {
+            "status": "success",
+            "message": f"Document {payload.id} updated."
+        }
+    except Exception as e:
+        logger.error(f"Error updating document {payload.id}: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+
 @app.post("/api/collective_summary")
 async def collective_summary_endpoint(payload: CollectiveSummaryPayload):
     summary = mistral.get_collective_summary(payload.sources)
@@ -103,7 +149,8 @@ def call_passive_perplexity(browser_info):
     metadata = [{"topic" : topic.name} for topic in related_topics_info.topics]
     add_documents(documents, metadata)
 
-def call_active_perplexity(question)
+def call_active_perplexity(question):
+    pass
     
 @app.post("/api/upload")
 async def upload_screenshot(payload: ScreenshotPayload):
@@ -196,3 +243,42 @@ async def upload_screenshot(payload: ScreenshotPayload):
     except Exception as e:
         logger.error(f"Error processing screenshot: {str(e)}", exc_info=True)
         return {"status": "error", "message": str(e)}
+
+
+
+
+
+# A thread-safe queue to store log messages
+log_queue = queue.Queue()
+
+# Custom logging handler that pushes logs to our queue
+class QueueHandler(logging.Handler):
+    def emit(self, record):
+        log_entry = self.format(record)
+        log_queue.put(log_entry)
+
+# Add the queue handler to the root logger
+queue_handler = QueueHandler()
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+queue_handler.setFormatter(formatter)
+logging.getLogger().addHandler(queue_handler)
+
+@app.get("/api/logs/stream")
+async def stream_logs(request: Request):
+    async def event_generator():
+        while True:
+            # If the client closes the connection, break
+            if await request.is_disconnected():
+                break
+
+            try:
+                # Try to get a log message from the queue
+                message = log_queue.get(timeout=1)
+                # Format it as SSE
+                yield f"data: {message}\n\n"
+            except queue.Empty:
+                # If no message, just sleep briefly and continue
+                await asyncio.sleep(0.5)
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
