@@ -98,9 +98,10 @@ def get_related_topics(topic : str) -> Response:
         "messages": [
             {
                 "role": "system",
-                "content": "Provide information about topics adjacent to the user's input. Output a JSON object with fields `thoughts`, and `answer`."
-                + " \n`thoughts` should be a deliberation of what the user may want to know."
-                + "\n`answer` should be an answer to the user's question, providing extensive information about adjacent topics in a bulleted list format."
+                "content": "Provide in-depth information about the user's input and topics adjacent to it. Output a JSON object with fields `thoughts`, and `answer`."
+                + " \n`thoughts` should be a discussion with yourself about what the user may want to know."
+                + "\n`answer` should be an answer to the user's question, providing extensive information about adjacent topics in a bulleted list format. Each topic should have at least three sentences."
+                + "\nIf the user is asking about something related to programming, make sure to include code examples and explanations throughout your response."
             },
             {
                 "role": "user",
@@ -124,20 +125,6 @@ def get_related_topics(topic : str) -> Response:
         return Response(**content)
     except Exception as e:
         raise e
-
-async def get_multiple_search_responses(prompts: List[str]) -> List[Response]:
-    """
-    Performs multiple search queries in parallel using Perplexity AI.
-    
-    Args:
-        prompts (list[str]): List of search queries or questions
-        
-    Returns:
-        List[str]: List of strings containing answers/information about topics
-    """
-    tasks = [get_search_response(prompt) for prompt in prompts]
-    results = await asyncio.gather(*tasks)
-    return [r.answer for r in results]
 
 if __name__ == "__main__":
     print(get_related_topics("Stanford University"))
