@@ -14,6 +14,8 @@ from dotenv import load_dotenv
 from clients import mistral
 from typing import List, Any
 
+import utils
+
 load_dotenv()
 
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
@@ -95,6 +97,14 @@ async def collective_summary_endpoint(payload: CollectiveSummaryPayload):
     summary = mistral.get_collective_summary(payload.sources)
     return {"summary": summary}
 
+def call_passive_perplexity(browser_info):
+    related_topics_info = utils.browser_info_to_related_topics(browser_info)
+    documents = [topic.topic_information for topic in related_topics_info.topics]
+    metadata = [{"topic" : topic.name} for topic in related_topics_info.topics]
+    add_documents(documents, metadata)
+
+def call_active_perplexity(question)
+    
 @app.post("/api/upload")
 async def upload_screenshot(payload: ScreenshotPayload):
     """
@@ -173,7 +183,8 @@ async def upload_screenshot(payload: ScreenshotPayload):
             collection_name="screenshots_collection"
         )
         logger.info("Successfully stored in vector database")
-        
+    
+        call_passive_perplexity(browser_info)
         return {
             "status": "success",
             "message": "Screenshot processed and stored",

@@ -1,17 +1,24 @@
 {
-    "name": "Pulse Screenshot Extension (No Local Storage)",
-    "description": "Takes a screenshot and sends it (plus URL/title) to a server with one click.",
-    "version": "1.0",
-    "manifest_version": 3,
-    "permissions": [
-      "activeTab",
-      "tabs"
-    ],
-    "background": {
-      "service_worker": "background.js"
-    },
-    "action": {
-      "default_popup": "popup.html"
+  "name": "Pulse Screenshot Extension (No Local Storage)",
+  "description": "Takes a screenshot and sends it (plus URL/title) to a server with one click.",
+  "version": "1.1",
+  "manifest_version": 3,
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "scripting"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["contentScript.js"],
+      "run_at": "document_idle"
     }
-  }
-  
+  ]
+}
