@@ -1,31 +1,46 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8">
     <title>Pulse Screenshot</title>
     <style>
       body {
-        font-family: sans-serif;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         margin: 0;
         padding: 10px;
+        background-color: #f9f9f9;
       }
       button {
-        padding: 10px 15px;
-        cursor: pointer;
-        /* Making the button “pretty” with some basic styling */
-        background-color: #2196F3;
+        display: block;
+        width: 100%;
+        padding: 12px 20px;
+        background: linear-gradient(145deg, #2196F3, #1976D2);
         color: #fff;
         border: none;
-        border-radius: 4px;
-        font-size: 14px;
+        border-radius: 30px;
+        font-size: 16px;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        box-shadow: 5px 5px 10px #c1c1c1, -5px -5px 10px #ffffff;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
       }
-      button:hover {
-        background-color: #1976D2;
+      button:hover:enabled {
+        transform: scale(1.02);
+        box-shadow: 8px 8px 16px #c1c1c1, -8px -8px 16px #ffffff;
+      }
+      button:active:enabled {
+        transform: scale(0.98);
+        box-shadow: 3px 3px 6px #c1c1c1, -3px -3px 6px #ffffff;
+      }
+      button:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
       }
     </style>
   </head>
   <body>
-    <!-- Renamed the button text to "Add This" -->
-    <button id="screenshot-btn">Add This</button>
+    <button id="screenshot-btn">Send to PulseAI</button>
     <script src="popup.js"></script>
   </body>
 </html>
