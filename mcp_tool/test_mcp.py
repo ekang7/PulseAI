@@ -22,11 +22,11 @@ metadata = [
 async def test_mcp_tool():
     # First, set up our test data in ChromaDB
     print("1. Setting up test data in ChromaDB...")
-    delete_collection("default_collection")
+    delete_collection("screenshots_collection")
     add_documents(
         documents=documents,
         metadata=metadata,
-        collection_name="default_collection"
+        collection_name="screenshots_collection"
     )
     
     # Test queries that would normally come from Codeium

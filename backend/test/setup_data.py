@@ -20,10 +20,10 @@ metadata = [
 ]
 
 print("Setting up test data in ChromaDB...")
-delete_collection("default_collection")
+delete_collection("screenshots_collection")
 add_documents(
     documents=documents,
     metadata=metadata,
-    collection_name="default_collection"
+    collection_name="screenshots_collection"
 )
 print("Done! Test data has been loaded into ChromaDB.")

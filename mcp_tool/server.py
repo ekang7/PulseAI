@@ -46,7 +46,7 @@ async def get_context_information(question: str = "") -> str:
     rag_results = query_documents(
         query_text=user_question,
         n_results=3,
-        collection_name="default_collection"
+        collection_name="screenshots_collection"
     )
     
     # Format the RAG results for the prompt

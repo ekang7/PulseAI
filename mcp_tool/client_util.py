@@ -6,7 +6,7 @@ BACKEND_URL = "http://localhost:8000"
 def query_documents(
     query_text: str,
     n_results: int = 5,
-    collection_name: str = "default_collection"
+    collection_name: str = "screenshots_collection"
 ) -> Dict[str, Any]:
     response = requests.post(BACKEND_URL + "/api/query_documents", json={
         "query_text": query_text,
@@ -26,7 +26,7 @@ def summarize_results_with_mistral(
 rag_results = query_documents(
         query_text="Hello?",
         n_results=3,
-        collection_name="default_collection"
+        collection_name="screenshots_collection"
     )
 # Format the RAG results for the prompt
 formatted_results = [

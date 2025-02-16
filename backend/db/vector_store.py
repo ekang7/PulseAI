@@ -24,7 +24,7 @@ client = chromadb.PersistentClient(path=PERSIST_DIRECTORY)
 # Use the default embedding function from ChromaDB
 default_ef = embedding_functions.DefaultEmbeddingFunction()
 
-def get_or_create_collection(collection_name: str = "default_collection"):
+def get_or_create_collection(collection_name: str = "screenshots_collection"):
     """Get an existing collection or create a new one if it doesn't exist."""
     try:
         collection = client.get_collection(name=collection_name)
@@ -41,7 +41,7 @@ def add_documents(
     documents: List[str],
     metadata: Optional[List[Dict[str, Any]]] = None,
     ids: Optional[List[str]] = None,
-    collection_name: str = "default_collection"
+    collection_name: str = "screenshots_collection"
 ) -> None:
     """
     Add documents to the vector store.
@@ -80,7 +80,7 @@ def add_documents(
 def query_documents(
     query_text: str,
     n_results: int = 5,
-    collection_name: str = "default_collection"
+    collection_name: str = "screenshots_collection"
 ) -> Dict[str, Any]:
     """
     Query the vector store for similar documents.
@@ -96,7 +96,7 @@ def query_documents(
     """
     logger.info(f"Querying collection {collection_name} for '{query_text}'")
     collection = get_or_create_collection(collection_name)
-    
+
     try:
         results = collection.query(
             query_texts=[query_text],
@@ -123,7 +123,7 @@ def delete_collection(collection_name: str) -> None:
         logger.info(f"Collection {collection_name} does not exist")
         pass  # Collection doesn't exist
 
-def get_collection_stats(collection_name: str = "default_collection") -> Dict[str, Any]:
+def get_collection_stats(collection_name: str = "screenshots_collection") -> Dict[str, Any]:
     """Get statistics about a collection."""
     logger.info(f"Getting stats for collection {collection_name}")
     collection = get_or_create_collection(collection_name)
@@ -138,7 +138,7 @@ def get_collection_stats(collection_name: str = "default_collection") -> Dict[st
         logger.error(f"Error getting stats for collection {collection_name}: {str(e)}")
         raise
 
-def list_all_documents(collection_name: str = "default_collection") -> Dict[str, Any]:
+def list_all_documents(collection_name: str = "screenshots_collection") -> Dict[str, Any]:
     """List all documents in a collection with their IDs and metadata."""
     logger.info(f"Listing all documents in collection {collection_name}")
     collection = get_or_create_collection(collection_name)
