@@ -7,3 +7,5 @@ python-dotenv
 pytesseract
 Pillow
 uvicorn
+uuid
+fastapi

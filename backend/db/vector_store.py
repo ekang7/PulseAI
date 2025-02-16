@@ -20,7 +20,16 @@ PERSIST_DIRECTORY = os.path.join(os.path.dirname(__file__), "..", "chroma_db")
 os.makedirs(PERSIST_DIRECTORY, exist_ok=True)
 
 # Initialize the ChromaDB client with persistent storage
-client = chromadb.PersistentClient(path=PERSIST_DIRECTORY)
+_client = None
+
+def get_client():
+    """Get or create a ChromaDB client instance."""
+    global _client
+    if _client is None:
+        _client = chromadb.PersistentClient(path=PERSIST_DIRECTORY)
+    return _client
+
+
 
 # Use the default embedding function from ChromaDB
 default_ef = embedding_functions.DefaultEmbeddingFunction()
@@ -28,11 +37,13 @@ default_ef = embedding_functions.DefaultEmbeddingFunction()
 def get_or_create_collection(collection_name: str = "screenshots_collection"):
     """Get an existing collection or create a new one if it doesn't exist."""
     try:
+        client = get_client()
         collection = client.get_collection(name=collection_name)
         logger.info(f"Retrieved existing collection: {collection_name}")
         return collection
     except chromadb.errors.InvalidCollectionException:
         logger.info(f"Creating new collection: {collection_name}")
+        client = get_client()
         return client.create_collection(
             name=collection_name,
             embedding_function=default_ef
@@ -93,7 +104,7 @@ def query_documents(
         
     Returns:
         Dictionary containing the query results including documents,
-        metadata, and distances
+        metadata, and distances. Returns empty lists if no results found.
     """
     logger.info(f"Querying collection {collection_name} for '{query_text}'")
     collection = get_or_create_collection(collection_name)
@@ -103,12 +114,13 @@ def query_documents(
             query_texts=[query_text],
             n_results=n_results
         )
-        logger.info(f"Successfully queried vector store with {len(results['documents'][0])} results")
+        num_results = len(results.get('documents', [[]])[0])
+        logger.info(f"Successfully queried vector store with {num_results} results")
         return {
-            "documents": results["documents"][0],
-            "metadatas": results["metadatas"][0],
-            "distances": results["distances"][0],
-            "ids": results["ids"][0]
+            "documents": results.get('documents', [[]])[0],
+            "metadatas": results.get('metadatas', [[]])[0],
+            "distances": results.get('distances', [[]])[0],
+            "ids": results.get('ids', [[]])[0]
         }
     except Exception as e:
         logger.error(f"Error querying vector store: {str(e)}")
@@ -118,12 +130,17 @@ def delete_collection(collection_name: str) -> None:
     """Delete a collection and all its contents."""
     logger.info(f"Deleting collection {collection_name}")
     try:
+        client = get_client()
         client.delete_collection(collection_name)
         logger.info(f"Successfully deleted collection {collection_name}")
-    except ValueError:
-        logger.info(f"Collection {collection_name} does not exist")
-        pass  # Collection doesn't exist
-
+    except ValueError as e:
+        logger.warning(f"Error deleting collection {collection_name}: {str(e)}")
+        # Re-raise if it's not the "collection doesn't exist" error
+        if "does not exist" not in str(e).lower():
+            raise
+    except Exception as e:
+        logger.error(f"Unexpected error deleting collection {collection_name}: {str(e)}")
+        raise
 
 def update_document(
     id: str,
@@ -132,32 +149,22 @@ def update_document(
     collection_name: str = "screenshots_collection"
 ):
     """
-    Update a document in the vector store by ID. We do this by:
-    1) Deleting the existing document with that ID.
-    2) Adding a new document with the same ID, updated content, and metadata.
+    Update a document in the vector store by ID using ChromaDB's upsert functionality.
+    This ensures atomic updates without potential data loss.
     """
     logger.info(f"Updating document with ID: {id} in collection {collection_name}")
     collection = get_or_create_collection(collection_name)
 
-    # Remove the old document if it exists
     try:
-        collection.delete(ids=[id])
-        logger.info(f"Deleted old document with ID: {id}")
-    except Exception as e:
-        logger.warning(f"Could not delete old doc with ID {id}: {e}")
-
-    # Add the updated document
-    try:
-        collection.add(
+        collection.upsert(
             documents=[new_content],
             metadatas=[new_metadata],
             ids=[id]
         )
         logger.info(f"Document {id} updated successfully.")
     except Exception as e:
-        logger.error(f"Could not add updated doc with ID {id}: {e}")
+        logger.error(f"Error updating document {id}: {str(e)}")
         raise
-
 
 def get_collection_stats(collection_name: str = "screenshots_collection") -> Dict[str, Any]:
     """Get statistics about a collection."""

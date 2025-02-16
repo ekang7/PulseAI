@@ -8,7 +8,6 @@ import simplejson as json
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import os
-import asyncio
 from typing import List
 
 load_dotenv()
@@ -100,7 +99,7 @@ def get_related_topics(topic : str) -> Response:
                 "role": "system",
                 "content": "Provide in-depth information about the user's input and exactly 3 topics adjacent to it. Output a JSON object with fields `thoughts`, and `answer`."
                 + " \n`thoughts` should be a discussion with yourself about what the user may want to know."
-                + "\n`answer` should be an answer to the user's question, providing extensive information about adjacent topics in a bulleted list format. Each topic should have at least three sentences."
+                + "\n`answer` should be an answer to the user's question, providing extensive information about the original topic and itsadjacent topics in a bulleted list format. Each topic should have at least three sentences."
                 + "\nIf the user is asking about something related to programming, make sure to include code examples and explanations throughout your response."
             },
             {
@@ -137,12 +136,12 @@ def get_related_topics_with_other_topics(topic : str, other_topics : List[str]) 
                 "role": "system",
                 "content": "Provide in-depth information about the user's input and exactly 3 topics adjacent to it. Output a JSON object with fields `thoughts`, and `answer`."
                 + " \n`thoughts` should be a discussion with yourself about what the user may want to know."
-                + "\n`answer` should be an answer to the user's question, providing extensive information about adjacent topics in a bulleted list format. Each topic should have at least three sentences."
+                + "\n`answer` should be an answer to the user's question, providing extensive information about the original topic and its adjacent topics in a bulleted list format. Each topic should have at least three sentences."
                 + "\nIf the user is asking about something related to programming, make sure to include code examples and explanations throughout your response."
             },
             {
                 "role": "user",
-                "content": "Tell me about " + topic.strip() + ". Then, tell me about 3 topics relevant to it. Some potentially related topics we are aware of are:\n" + prompted_topics
+                "content": "Tell me about " + topic.strip() + " and 3 topics adjacent to it. Some potentially related topics we are aware of are:\n" + prompted_topics
             },
         ],
         "response_format": {
@@ -159,7 +158,6 @@ def get_related_topics_with_other_topics(topic : str, other_topics : List[str]) 
 
     try:
         content = json.loads(raw_content, strict=False)
-        print(content["answer"])
         return Response(**content)
     except Exception as e:
         raise e

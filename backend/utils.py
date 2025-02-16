@@ -23,16 +23,8 @@ def call_active_perplexity(question : str) -> None:
     related_topic_search = perplexity.get_related_topics_with_other_topics(topic.topic, [metadata["topic"] for metadata in db_results["metadatas"]])
     related_topics_info = mistral.get_topics(related_topic_search.answer)
 
-    print(related_topics_info.topics)
     documents = [f"Here is information about {topic.name}.\n" + topic.topic_information for topic in related_topics_info.topics]
     metadata = [{"topic" : topic.name} for topic in related_topics_info.topics]
 
     # Only add up to 3 additional items
-    print(documents[0], metadata[0])
     add_documents(documents[:min(len(documents),4)], metadata[:min(len(documents),4)])
-
-
-call_passive_perplexity("Google is a conglomerate specializing in technology.")
-call_active_perplexity("What is a search engine?")
-
-print(query_documents("Search Engine", 10)["metadatas"])
