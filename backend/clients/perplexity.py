@@ -8,6 +8,8 @@ import simplejson as json
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import os
+import asyncio
+from typing import List
 
 load_dotenv()
 PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY")
@@ -28,7 +30,7 @@ class Response(BaseModel):
     thoughts: str
     answer: str
 
-def get_search_response(user_prompt : str) -> Response:
+async def get_search_response(user_prompt : str) -> Response:
     """
     Performs a search query using Perplexity AI and returns a structured response.
     
@@ -96,9 +98,10 @@ def get_related_topics(topic : str) -> Response:
         "messages": [
             {
                 "role": "system",
-                "content": "Provide information about topics adjacent to the user's input. Output a JSON object with fields `thoughts`, and `answer`."
-                + " \n`thoughts` should be a deliberation of what the user may want to know."
-                + "\n`answer` should be an answer to the user's question, providing extensive information about adjacent topics in a bulleted list format."
+                "content": "Provide in-depth information about the user's input and topics adjacent to it. Output a JSON object with fields `thoughts`, and `answer`."
+                + " \n`thoughts` should be a discussion with yourself about what the user may want to know."
+                + "\n`answer` should be an answer to the user's question, providing extensive information about adjacent topics in a bulleted list format. Each topic should have at least three sentences."
+                + "\nIf the user is asking about something related to programming, make sure to include code examples and explanations throughout your response."
             },
             {
                 "role": "user",

@@ -100,7 +100,7 @@ def get_topics(text : str) -> TopicsResponse | None:
         messages=[
             {
                 "role": "system", 
-                "content": "Return the key topics of the user's statement. Topic names should be descriptive and not abbreviations; they should be interpretable when taken out of context. For example, text about Shakespeare that talks about his birth should have topic name \"Shakespeare's Birth\" instead of just \"Birth\". Topic information should be the information pertaining to each topic."
+                "content": "Return the key topics of the user's statement. Topic names should be as descriptive as possible and interpretable even when taken out of context. For example, text about Shakespeare that talks about his birth should have topic name \"Shakespeare's Birth\" instead of just \"Birth\". Topic information should be the information pertaining to each topic."
             },
             {
                 "role": "user",
