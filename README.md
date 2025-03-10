@@ -21,4 +21,4 @@ The Chrome extension used to capture screenshots when allowed. It sends these to
 
 ### MCP Tool (`/mcp_tool`)
 
-The MCP tool that is used by Cascade to retrieve relevant context in real-time.
+We created a new MCP tool that is used by Cascade to retrieve relevant context in real-time.
