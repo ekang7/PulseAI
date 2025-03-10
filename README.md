@@ -1,4 +1,4 @@
-# PulseAI: Browser-Based Coding Assistant Tool
+# PulseAI: Browser-Based Coding Assistant Tool (TreeHacks 2025 Codeium Prize Winner for Best Use of Windsurf)
 
 PulseAI is a tool that enhances your AI coding assistant experience by providing your assistant with information about your (voluntarily captured) browser activity. By providing your assistant with a better understanding of your work, you'll be able to work with an agent that provides targeted suggestions and aid.
 
